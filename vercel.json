@@ -1,0 +1,18 @@
+{
+  "buildCommand": "node build_all_institutes.js gs1 && node build_all_institutes.js csat",
+  "outputDirectory": "dist",
+  "installCommand": "echo skip",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
+  "routes": [
+    { "src": "/gs1", "dest": "/all-institutes-gs1-score-checker.html" },
+    { "src": "/csat", "dest": "/all-institutes-csat-score-checker.html" },
+    { "src": "/", "dest": "/index.html" }
+  ]
+}

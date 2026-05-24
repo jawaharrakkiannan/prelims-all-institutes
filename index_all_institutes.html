@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:#F7F3EA;color:#1A1D2B;min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px}
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:12px;border:1px solid #E6E0D5;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.sticky-head{position:sticky;top:0;z-index:20;background:var(--c-accent)}
+.prog-bar{height:3px;background:rgba(0,0,0,.15);border-radius:2px;margin:10px 0 6px}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s;background:var(--c-on-accent);opacity:.7}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E6E0D5;z-index:20;padding:10px 16px}
+.bottom-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;text-align:center;letter-spacing:.01em}
+.btn:active{opacity:.85}
+.btn-outline{background:#fff;border:1.5px solid #E6E0D5;color:#1A1D2B}
+.btn-sm{padding:7px 14px;font-size:12px;width:auto;display:inline-block;border-radius:7px;border:none;cursor:pointer;font-weight:700}
+.paper-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 16px}
+.paper-btn{padding:22px 8px;border:1.5px solid #E6E0D5;border-radius:12px;background:#fff;font-family:'Playfair Display',serif;font-size:30px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;color:#1A1D2B}
+.q-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F0EAE0}
+.q-row:last-child{border-bottom:none}
+.q-num{font-size:12px;font-weight:700;min-width:36px;font-variant-numeric:tabular-nums;color:#9CA3AF}
+.q-opts{display:flex;gap:6px;flex:1}
+.opt-btn{flex:1;min-height:46px;padding:10px 4px;border:1.5px solid #E6E0D5;border-radius:10px;background:#fff;font-size:16px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s;color:#1A1D2B}
+.page-dots{display:flex;gap:4px;overflow-x:auto;padding:2px 0;flex:1;justify-content:center}
+.page-dot{width:30px;height:30px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;flex-shrink:0;transition:all .15s}
+.summ-bar{display:flex;gap:6px}
+.summ-cell{flex:1;border-radius:10px;padding:10px 6px;text-align:center}
+.summ-label{font-size:11px;font-weight:700}
+.summ-val{font-size:22px;font-weight:800}
+.r-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 2px;border-radius:8px;cursor:pointer;border:1.5px solid transparent;transition:transform .1s}
+.r-tile:hover{transform:scale(1.1)}
+.r-tile-qno{font-size:9px;line-height:1;opacity:.65}
+.r-tile-ans{font-size:12px;font-weight:800;line-height:1;margin-top:2px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--c-accent-border)}
+.tbl-fixed{table-layout:fixed}
+thead{position:sticky;top:0;z-index:1}
+th{background:var(--c-accent-bg);color:var(--c-accent-dark);padding:12px 16px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;border-bottom:2px solid var(--c-accent);border-right:1px solid var(--c-accent-border-th);cursor:pointer;user-select:none;white-space:nowrap}
+th:last-child{border-right:none}
+th:hover{background:var(--c-accent-hover-bg)}
+td{padding:12px 16px;border-bottom:1px solid var(--c-accent-border);border-right:1px solid var(--c-accent-border);vertical-align:middle;font-size:13px}
+td:last-child{border-right:none}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--c-accent-bg)}
+.t-correct{color:#166534;font-weight:700}
+.t-wrong{color:#991B1B;font-weight:700}
+.t-skip{color:#9CA3AF}
+.t-dropped{color:#D1D5DB;font-style:italic}
+.cq-wrap{min-width:320px;font-size:0.9rem;vertical-align:top;padding:12px 16px}
+.cq-subject{font-family:'JetBrains Mono',monospace;color:#5C4E3C;font-size:0.65rem;letter-spacing:.5px;display:block;margin-bottom:5px}
+.cq-lead{font-family:'Lora',Georgia,serif;font-size:0.9rem;line-height:1.78;color:#0C0A07;margin-bottom:8px}
+.cq-stmts{border-left:3px solid var(--c-accent-muted);padding-left:14px;margin:10px 0;list-style:none}
+.cq-stmts li{margin:6px 0;font-size:0.88rem;color:#1C1510;line-height:1.65}
+.cq-assertion{border-left:3px solid #1E40AF;padding:10px 14px;background:rgba(30,64,175,.08);margin:10px 0;font-size:0.88rem;line-height:1.65;font-family:'Lora',Georgia,serif}
+.cq-qtable{border-collapse:collapse;width:100%;font-size:0.82rem;margin:8px 0}
+.cq-qtable th{background:var(--c-accent-bg);color:var(--c-accent);padding:6px 10px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;border-bottom:2px solid var(--c-accent)}
+.cq-qtable td{border:1px solid var(--c-accent-border);padding:6px 10px;color:#1C1510}
+.cq-tail{font-style:italic;color:#5C4E3C;margin-top:10px;font-size:0.88rem;line-height:1.65;font-family:'Lora',Georgia,serif}
+.cq-options{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.cq-option{display:flex;align-items:baseline;gap:8px;font-size:0.88rem;line-height:1.5}
+.cq-opt-key{font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;background:var(--c-accent-bg);border:1.5px solid var(--c-accent-muted);width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c-accent)}
+.aq-lead{font-size:1.08rem;margin-bottom:.7rem;line-height:1.75;color:#1A1D2B}
+.aq-statements{list-style:none;margin:.5rem 0 .8rem .5rem;border-left:3px solid #C8D6E5;padding-left:1.1rem}
+.aq-statements li{font-size:1.04rem;margin-bottom:.35rem;line-height:1.65;color:#374151}
+.aq-assertion{margin:.5rem 0 .8rem}
+.aq-stmt-label{font-weight:700;font-size:.85rem;color:#0B1929;text-transform:uppercase;letter-spacing:.06em;display:block}
+.aq-stmt-text{font-size:1.04rem;margin:.15rem 0 .6rem .3rem;border-left:3px solid #E8C9A0;padding-left:.95rem;line-height:1.65;color:#374151;display:block}
+.aq-table{width:100%;border-collapse:collapse;font-size:.97rem;margin:.55rem 0 .8rem}
+.aq-table th{background:#0B1929;color:#fff;padding:.5rem .85rem;text-align:left;font-size:.88rem;font-weight:700}
+.aq-table td{padding:.5rem .85rem;border:1px solid #E6E0D5;vertical-align:top}
+.aq-table tr:nth-child(even) td{background:#FAF8F4}
+.aq-tail{font-size:1.04rem;font-style:italic;color:#5B6375;margin:.6rem 0 .85rem;line-height:1.65}
+.aq-options{display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1.2rem;margin-top:.7rem}
+.aq-options.aq-single{grid-template-columns:1fr}
+.aq-opt{display:flex;align-items:flex-start;gap:.55rem;font-size:1.02rem;padding:10px 13px;border-radius:9px;border:1.5px solid transparent}
+.aq-opt-key{display:inline-flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;min-width:1.8rem;border:1.5px solid #0B1929;border-radius:50%;font-size:.82rem;font-weight:700;color:#0B1929;margin-top:.1rem;flex-shrink:0}
+.aq-opt-text{color:#1A1D2B;line-height:1.55;font-size:1.02rem}
+@media(max-width:700px){.aq-options{grid-template-columns:1fr}}
+/* ── Result page ──────────────────────────────────────────────────────────── */
+@keyframes res-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.res-card{background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E6E0D5;box-shadow:0 2px 24px rgba(11,25,41,.08);margin-bottom:14px;animation:res-in .38s cubic-bezier(.22,1,.36,1) both}
+.res-card:nth-child(2){animation-delay:.11s}
+.res-card::before{content:'';display:block;height:4px;background:var(--rc-accent,#B45309)}
+.res-card__hd{padding:16px 20px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.res-card__eye{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--rc-accent,#B45309);margin-bottom:4px}
+.res-card__nm{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#1C1510}
+.res-card__bdg{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border:1.5px solid var(--rc-accent,#B45309);border-radius:20px;color:var(--rc-accent,#B45309);flex-shrink:0;margin-top:2px}
+.res-score-wrap{padding:24px 20px 20px;text-align:center;border-top:1px solid var(--c-accent-bg);border-bottom:1px solid var(--c-accent-bg)}
+.res-score{font-family:'Playfair Display',serif;font-size:60px;font-weight:800;color:#0B1929;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em}
+.res-score-den{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--c-accent-muted);vertical-align:super;margin-left:6px}
+.res-score-exam{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--c-accent-border);letter-spacing:2px;text-transform:uppercase;margin-top:10px}
+.res-stats{display:flex;background:var(--c-accent-bg);gap:1px}
+.res-stat{flex:1;background:#fff;padding:13px 8px;text-align:center}
+.res-stat__n{display:block;font-family:'Playfair Display',serif;font-size:22px;font-weight:800;line-height:1}
+.res-stat__l{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.res-stat--ok .res-stat__n{color:#15803d}.res-stat--ok .res-stat__l{color:#16a34a}
+.res-stat--ng .res-stat__n{color:#dc2626}.res-stat--ng .res-stat__l{color:#ef4444}
+.res-stat--sk .res-stat__n{color:#5B6375}.res-stat--sk .res-stat__l{color:#9CA3AF}
+.res-card--pend::before{background:#D1CAC0}
+.bk-card{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--c-accent-border);box-shadow:0 2px 16px rgba(0,0,0,.06);animation:res-in .4s .22s cubic-bezier(.22,1,.36,1) both}
+.bk-hd{background:var(--c-accent);padding:14px 20px}
+.bk-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--c-on-accent);text-transform:uppercase;letter-spacing:3px}
+.bk-ctrl{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--c-accent-divider)}
+.bk-filt{padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--c-accent-divider);background:#FAF8F4}
+</style>
+</head>
+<body>
+<!-- INJECT_CONFIG -->
+<div id="app"></div>
+<script>
+const TOTAL_Q=PAPER_CONFIG.totalQ, PER_PAGE=PAPER_CONFIG.perPage, TOTAL_PAGES=PAPER_CONFIG.totalPages
+const OPTIONS=['A','B','C','D']
+const P=APP_CONFIG.primaryColor||'#f97316'
+
+const OPT_BG  ={A:'#dbeafe',B:'#f3e8ff',C:'#ccfbf1',D:'#e0e7ff',skip:'#fef3c7'}
+const OPT_TXT ={A:'#1e40af',B:'#6b21a8',C:'#0f766e',D:'#3730a3',skip:'#92400e'}
+
+const STORE_KEY='upsc_t1_all_state_'+PAPER_CONFIG.paper
+const APP_NAME=APP_CONFIG.name
+document.title=APP_NAME
+
+var scoreSent=false
+
+const state={screen:'landing',paperCode:null,responses:{},page:1,sortCol:null,sortDir:1,editingPaper:false,editPaperReview:false,tableView:0,confirmingNewAttempt:false,showQuestions:false,filterSubject:'all',filterStatus:'all',subjTableCollapsed:false,accTableCollapsed:false,qTableCollapsed:false,subjSortCol:'attPct',subjSortDir:-1,accSortCol:'accPct',accSortDir:-1,selectedInstituteIdx:0}
+
+// Restore persisted state on load (window.__DL_STATE__ set by downloaded file takes priority)
+try{
+  var _p=window.__DL_STATE__||(localStorage.getItem(STORE_KEY)?JSON.parse(localStorage.getItem(STORE_KEY)):null)
+  if(_p){
+    state.paperCode=_p.paperCode||null
+    state.responses=_p.responses||{}
+    state.page=_p.page||1
+    state.screen=_p.screen||'landing'
+    state.sortCol=_p.sortCol||null
+    state.sortDir=_p.sortDir||1
+    state.tableView=_p.tableView||0
+    state.showQuestions=_p.showQuestions||false
+    state.filterSubject=_p.filterSubject||'all'
+    state.filterStatus=_p.filterStatus||'all'
+    state.subjTableCollapsed=false
+    state.accTableCollapsed=false
+    state.qTableCollapsed=false
+    state.subjSortCol=_p.subjSortCol||'attPct'
+    state.subjSortDir=_p.subjSortDir||-1
+    state.accSortCol=_p.accSortCol||'accPct'
+    state.accSortDir=_p.accSortDir||-1
+    state.selectedInstituteIdx=_p.selectedInstituteIdx||0
+  }
+}catch(e){}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORE_KEY,JSON.stringify({
+      paperCode:state.paperCode,responses:state.responses,
+      page:state.page,screen:state.screen,
+      sortCol:state.sortCol,sortDir:state.sortDir,tableView:state.tableView||0,
+      showQuestions:state.showQuestions,filterSubject:state.filterSubject,filterStatus:state.filterStatus,subjTableCollapsed:state.subjTableCollapsed,accTableCollapsed:state.accTableCollapsed,qTableCollapsed:state.qTableCollapsed,subjSortCol:state.subjSortCol,subjSortDir:state.subjSortDir,accSortCol:state.accSortCol,accSortDir:state.accSortDir,selectedInstituteIdx:state.selectedInstituteIdx
+    }))
+  }catch(e){}
+}
+
+function validKey(k){
+  if(!k) return null
+  var n=String(k).trim().toUpperCase()
+  return(n==='A'||n==='B'||n==='C'||n==='D')?n:null
+}
+
+function isKeyEmpty(key){return Object.keys(key.answers).every(function(k){return !validKey(key.answers[k])})}
+
+function canonQ(pc,q){
+  if(pc==='A') return q
+  var m=PAPER_MAPPING[pc]
+  return m&&m[q]?m[q]:q
+}
+
+function calcScore(key){
+  var correct=0,wrong=0,skip=0
+  for(var q=1;q<=TOTAL_Q;q++){
+    var c=canonQ(state.paperCode,q),s=state.responses[q],k=validKey(key.answers[c])
+    if(!k) continue  // dropped — not evaluated
+    if(!s) skip++
+    else if(s===k) correct++
+    else wrong++
+  }
+  return{correct:correct,wrong:wrong,skip:skip,score:correct*PAPER_CONFIG.correctMark-wrong*PAPER_CONFIG.wrongMark}
+}
+
+function buildRows(keys){
+  var rows=[]
+  for(var q=1;q<=TOTAL_Q;q++){
+    var c=canonQ(state.paperCode,q),s=state.responses[q]||'-'
+    var row={q:q,c:c,s:s}
+    keys.forEach(function(key,i){
+      var ka=validKey(key.answers[c])
+      row['ka'+i]=ka||'&mdash;'
+      row['kr'+i]=!ka?'dropped':!state.responses[q]?'skip':state.responses[q]===ka?'correct':'wrong'
+    })
+    rows.push(row)
+  }
+  return rows
+}
+
+function getResult(setAQ){
+  var avail=[].concat(INSTITUTES_KEYS,[OFFICIAL_KEY]).filter(function(k){return !isKeyEmpty(k)})
+  if(!avail.length) return 'nokey'
+  var key=avail[0]
+  var keyAns=validKey(key.answers[setAQ])
+  if(!keyAns) return 'nokey'
+  var studentQ=setAQ
+  if(state.paperCode!=='A'){
+    var m=PAPER_MAPPING[state.paperCode]||{}
+    var found=Object.keys(m).filter(function(sq){return m[sq]==setAQ})
+    if(found.length) studentQ=parseInt(found[0])
+  }
+  var ans=state.responses[studentQ]
+  if(!ans) return 'skip'
+  return ans===keyAns?'correct':'wrong'
+}
+
+function pageAnswered(p){
+  for(var q=(p-1)*PER_PAGE+1;q<=p*PER_PAGE;q++) if(!state.responses[q]) return false
+  return true
+}
+
+function postScore(){
+  if(scoreSent) return
+  scoreSent=true
+  var scOff=isKeyEmpty(OFFICIAL_KEY)?null:calcScore(OFFICIAL_KEY)
+  var ctrl=new AbortController();setTimeout(function(){ctrl.abort()},10000)
+  fetch(SUPABASE_CONFIG.url+'/rest/v1/'+SUPABASE_CONFIG.table,{
+    signal:ctrl.signal,
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey':SUPABASE_CONFIG.anonKey,
+      'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,
+      'Prefer':'return=minimal'
+    },
+    body:JSON.stringify({
+      paper:PAPER_CONFIG.paper,
+      paper_code:state.paperCode,
+      skipped:PAPER_CONFIG.totalQ-Object.keys(state.responses).length,
+      attempted:Object.keys(state.responses).length,
+      correct_official:scOff?scOff.correct:null,
+      wrong_official:scOff?scOff.wrong:null,
+      score_official:scOff?Math.round(scOff.score*100)/100:null
+    })
+  }).then(function(r){
+    if(!r.ok) scoreSent=false
+  }).catch(function(){
+    scoreSent=false
+  })
+}
+
+function showRenderError(){
+  var el=document.getElementById('app')
+  if(!el) return
+  el.textContent=''
+  var wrap=document.createElement('div')
+  wrap.setAttribute('style','display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;background:#F7F3EA')
+  var h=document.createElement('p');h.setAttribute('style','font-size:16px;font-weight:700;color:#1A1D2B;margin-bottom:8px');h.textContent='Something went wrong'
+  var s=document.createElement('p');s.setAttribute('style','font-size:13px;color:#5B6375;margin-bottom:20px');s.textContent='Your responses are saved. Tap reload to continue.'
+  var b=document.createElement('button');b.setAttribute('style','padding:12px 24px;background:'+P+';color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer');b.textContent='Reload';b.onclick=function(){location.reload()}
+  wrap.appendChild(h);wrap.appendChild(s);wrap.appendChild(b);el.appendChild(wrap)
+}
+
+function render(){
+  try{
+    saveState()
+    var app=document.getElementById('app')
+    if(state.screen==='landing') app.innerHTML=renderLanding()
+    else if(state.screen==='entry') app.innerHTML=renderEntry()
+    else if(state.screen==='review') app.innerHTML=renderReview()
+    else if(state.screen==='result'){app.innerHTML=renderResult();postScore()}
+    bind()
+  }catch(e){showRenderError()}
+}
+
+// ── Landing ──────────────────────────────────────────────────────────────────
+function renderLanding(){
+  var hasSaved=state.paperCode!==null&&Object.keys(state.responses).length>0
+
+  var header=
+    '<div style="text-align:center;margin-bottom:28px;">' +
+      '<h1 style="font-family:\'Playfair Display\',serif;font-size:22px;font-weight:700;color:#1A1D2B;line-height:1.25;margin-bottom:10px;">'+APP_CONFIG.name+'</h1>' +
+      '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:'+P+';margin-bottom:12px;">UPSC-CSE Prelims 2026</p>' +
+      '<div style="width:40px;height:2px;background:'+P+';margin:0 auto 12px;border-radius:2px;"></div>' +
+      '<p style="font-size:12px;color:#5B6375;font-weight:500;letter-spacing:.02em;">'+APP_CONFIG.examName+'&nbsp;&bull;&nbsp;'+APP_CONFIG.examPaper+'</p>' +
+    '</div>'
+
+  var step3BulletHtml='<ul style="list-style:none;text-align:left;margin:5px 0 0;padding:0;">'+
+    ['Score with correct / wrong tally','Question-wise breakdown','Subject-wise performance'].map(function(b){
+      return '<li style="font-size:9.5px;color:#5B6375;line-height:1.7;padding-left:10px;position:relative;"><span style="position:absolute;left:0;color:'+P+';">&rsaquo;</span>'+b+'</li>'
+    }).join('')+
+    '</ul>'
+  var descSteps=[
+    ['Pick your set','Select A, B, C or D from your booklet',''],
+    ['Enter answers','Mark each question one page at a time',''],
+    ['See your analysis','',step3BulletHtml]
+  ]
+  var desc=
+    '<div style="background:#F7F3EA;border-radius:10px;padding:14px 16px;margin-bottom:22px;">' +
+      '<p style="font-family:\'JetBrains Mono\',monospace;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9CA3AF;text-align:center;margin-bottom:10px;">How it works</p>' +
+      '<div style="display:flex;flex-direction:column;gap:0;">' +
+        descSteps.map(function(s,i){
+          return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:white;border-radius:8px;border:1px solid #E6E0D5;">' +
+            '<div style="font-size:16px;font-weight:800;color:'+P+';min-width:20px;text-align:center;padding-top:1px;">'+(i+1)+'</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:11px;font-weight:700;color:#1A1D2B;margin-bottom:2px;">'+s[0]+'</div>' +
+              (s[1]?'<div style="font-size:10px;color:#9CA3AF;line-height:1.4;">'+s[1]+'</div>':'')+
+              s[2]+
+            '</div>' +
+          '</div>' +
+          (i<2?'<div style="text-align:center;padding:3px 0;font-size:11px;color:#D1D5DB;">&#8595;</div>':'')
+        }).join('') +
+      '</div>' +
+    '</div>'
+
+  var body
+  if(hasSaved){
+    var answered=Object.keys(state.responses).length
+    body=
+      '<div style="border:1.5px solid #E6E0D5;border-radius:14px;padding:24px;text-align:center;margin-bottom:20px;background:#FDFAF5;">' +
+        '<p style="font-size:10px;font-weight:700;color:#5B6375;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">Saved Attempt</p>' +
+        '<p style="font-family:\'Playfair Display\',serif;font-size:20px;font-weight:700;color:#1A1D2B;margin-bottom:4px;">Set&nbsp;'+state.paperCode+'&ensp;&mdash;&ensp;'+answered+'&nbsp;answered</p>' +
+        '<p style="font-size:12px;color:#9CA3AF;margin-bottom:20px;line-height:1.5;">Your responses are saved. View your result or start fresh.</p>' +
+        '<button id="view-result-btn" class="btn" style="background:'+P+';color:white;margin-bottom:10px;">View Your Result &rarr;</button>' +
+        '<button id="new-attempt-btn" style="display:block;width:100%;background:none;border:none;font-size:13px;font-weight:600;color:#9CA3AF;cursor:pointer;padding:6px;">Start New Attempt</button>' +
+      '</div>'
+  }else{
+    var anySelected=state.paperCode!==null
+    var btns=OPTIONS.map(function(p){
+      var sel=state.paperCode===p
+      var style=sel
+        ?'background:'+P+';border-color:'+P+';color:white;transform:scale(1.04);box-shadow:0 4px 16px '+P+'40;'
+        :anySelected?'opacity:.45;':''
+      return '<button class="paper-btn" data-paper="'+p+'" style="'+style+'">'+p+'</button>'
+    }).join('')
+    body=
+      '<p style="font-size:11px;font-weight:700;color:#5B6375;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Paper Set <span style="font-size:11px;color:#9CA3AF;text-transform:none;font-weight:400;letter-spacing:0;">(on your question booklet)</span></p>' +
+      '<div class="paper-grid">'+btns+'</div>' +
+      '<button id="start-btn" class="btn" style="background:'+P+';color:white;margin-top:4px;'+(!state.paperCode?'opacity:.38;cursor:not-allowed;pointer-events:none':'')+'">Start Entering Answers</button>'
+  }
+
+  return '<div style="background:#F7F3EA;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">' +
+    '<div style="width:100%;max-width:400px;">' +
+      '<div style="background:#fff;border-radius:20px;padding:38px 28px 28px;border:1px solid #E6E0D5;box-shadow:0 4px 32px rgba(0,0,0,.07);">' +
+        header+desc+body+
+        '<p style="text-align:center;font-size:11px;color:#9CA3AF;margin-top:20px;line-height:1.7;">'+APP_CONFIG.contactEmail+'</p>' +
+        '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #F0EDE8;text-align:center;">' +
+          '<a href="'+(PAPER_CONFIG.paper==='GS'?'/csat':'/gs1')+'" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:'+P+';color:#fff;border-radius:10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">' +
+            'Check '+(PAPER_CONFIG.paper==='GS'?'CSAT Paper 2':'GS Paper 1')+' <span style="font-size:14px;">&#8594;</span>' +
+          '</a>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+  (state.confirmingNewAttempt
+    ? '<div style="position:fixed;inset:0;background:rgba(11,25,41,.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;">' +
+        '<div style="background:white;border-radius:18px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 24px 64px rgba(0,0,0,.3);border:1px solid #E6E0D5;">' +
+          '<h2 style="font-family:\'Playfair Display\',serif;font-size:20px;font-weight:700;color:#1A1D2B;margin-bottom:10px;">Erase All Responses?</h2>' +
+          '<p style="font-size:14px;color:#5B6375;line-height:1.65;margin-bottom:8px;">Your saved attempt and all analysis data will be <strong style="color:#B91C1C;">permanently erased</strong>.</p>' +
+          '<p style="font-size:13px;color:#9CA3AF;line-height:1.65;margin-bottom:24px;">You will have to re-enter all ' + TOTAL_Q + ' answers to re-evaluate your score.</p>' +
+          '<button id="confirm-new-attempt-yes" style="display:block;width:100%;padding:14px;background:#B91C1C;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">Yes, Erase Everything</button>' +
+          '<button id="confirm-new-attempt-no" style="display:block;width:100%;padding:12px;background:none;border:1.5px solid #E6E0D5;color:#5B6375;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>' +
+        '</div>' +
+      '</div>'
+    : '')
+}
+
+// ── Entry ────────────────────────────────────────────────────────────────────
+function renderEntry(){
+  var start=(state.page-1)*PER_PAGE+1,end=state.page*PER_PAGE
+  var answered=Object.keys(state.responses).length
+  var pct=(answered/TOTAL_Q*100).toFixed(1)
+  var isLast=state.page===TOTAL_PAGES
+
+  var rows=''
+  for(var q=start;q<=end;q++){
+    var sel=state.responses[q]
+    var opts=OPTIONS.map(function(opt){
+      var active=sel===opt
+      return '<button class="opt-btn" data-q="'+q+'" data-opt="'+opt+'" style="'+(active?'background:'+P+';border-color:'+P+';color:white':'')+'">'+ opt+'</button>'
+    }).join('')
+    rows+='<div class="q-row">' +
+      '<span class="q-num" style="color:'+(sel?P:'#9CA3AF')+'">Q'+q+'</span>' +
+      '<div class="q-opts">'+opts+'</div>' +
+    '</div>'
+  }
+
+  var dots=Array.from({length:TOTAL_PAGES},function(_,i){
+    var p=i+1,done=pageAnswered(p),active=p===state.page
+    return '<button class="page-dot" data-pg="'+p+'" style="background:'+(active?P:done?'#d1fae5':'var(--c-accent-bg)')+';color:'+(active?'white':done?'#065f46':'#5B6375')+'">'+p+'</button>'
+  }).join('')
+
+  return '<div style="background:#F7F3EA;min-height:100vh;padding-bottom:68px;">' +
+    '<div class="sticky-head">' +
+      '<div class="wrap" style="padding-top:10px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-size:13px;font-weight:700;color:var(--c-on-accent);">'+APP_CONFIG.examPaper+'</span>' +
+            (state.editingPaper
+              ? OPTIONS.map(function(code){
+                  var sel=code===state.paperCode
+                  return '<button data-setpaper-entry="'+code+'" style="width:28px;height:28px;border-radius:6px;font-size:12px;font-weight:800;border:2px solid '+(sel?'var(--c-on-accent)':'rgba(0,0,0,.2)')+';background:'+(sel?'rgba(0,0,0,.2)':'rgba(0,0,0,.1)')+';color:var(--c-on-accent);cursor:pointer;">'+code+'</button>'
+                }).join('')
+              : '<span style="font-size:11px;background:rgba(0,0,0,.2);color:var(--c-on-accent);border-radius:4px;padding:2px 7px;font-weight:700;">Set '+state.paperCode+'</span>' +
+                '<button id="edit-paper-entry" style="background:none;border:none;cursor:pointer;color:var(--c-on-accent);opacity:.5;padding:2px;display:flex;align-items:center;" title="Change paper code">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>' +
+                '</button>'
+            ) +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-size:12px;color:var(--c-on-accent);opacity:.6;">'+answered+' / '+TOTAL_Q+'</span>' +
+            '<button id="to-review" class="btn-sm" style="border:1.5px solid var(--c-on-accent);color:var(--c-on-accent);background:rgba(0,0,0,.12);">Review &rarr;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div>' +
+        '<p style="font-size:11px;color:var(--c-on-accent);opacity:.4;text-align:right;padding-bottom:8px;">Page '+state.page+' of '+TOTAL_PAGES+' &mdash; Q'+start+'&ndash;Q'+end+'</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="wrap" style="padding-top:12px;"><div class="card">'+rows+'</div></div>' +
+    '<div class="bottom-nav"><div class="bottom-inner">' +
+      '<button id="prev-btn" class="btn-sm btn-outline" style="'+(state.page===1?'opacity:.35;cursor:not-allowed':'')+'" '+(state.page===1?'disabled':'')+'>&#8592; Prev</button>' +
+      '<div class="page-dots">'+dots+'</div>' +
+      (isLast
+        ? '<button id="review-btn" class="btn-sm" style="background:'+P+';color:white;white-space:nowrap;">Review &rarr;</button>'
+        : '<button id="next-btn" class="btn-sm" style="background:'+P+';color:white;white-space:nowrap;">Next &rarr;</button>'
+      ) +
+    '</div></div>' +
+  '</div>'
+}
+
+// ── Review ───────────────────────────────────────────────────────────────────
+function renderReview(){
+  var answered=Object.keys(state.responses).length,unanswered=TOTAL_Q-answered
+  var counts={A:0,B:0,C:0,D:0}
+  Object.keys(state.responses).forEach(function(k){var v=state.responses[k];if(counts[v]!==undefined)counts[v]++})
+
+  var summBars=OPTIONS.map(function(opt){
+    return '<div class="summ-cell" style="background:'+OPT_BG[opt]+'">' +
+      '<div class="summ-label" style="color:'+OPT_TXT[opt]+'">'+opt+'</div>' +
+      '<div class="summ-val" style="color:'+OPT_TXT[opt]+'">'+counts[opt]+'</div>' +
+    '</div>'
+  }).join('')
+  summBars+='<div class="summ-cell" style="background:'+(unanswered>0?OPT_BG.skip:'#f1f5f9')+'">' +
+    '<div class="summ-label" style="color:'+(unanswered>0?OPT_TXT.skip:'#94a3b8')+'">Skip</div>' +
+    '<div class="summ-val" style="color:'+(unanswered>0?OPT_TXT.skip:'#94a3b8')+';'+(unanswered>0?'font-size:24px;':'')+'">'+ unanswered+'</div>' +
+  '</div>'
+
+  var uList=[]
+  for(var uq=1;uq<=TOTAL_Q;uq++) if(!state.responses[uq]) uList.push('Q'+uq)
+
+  var tiles=''
+  for(var tq=1;tq<=TOTAL_Q;tq++){
+    var ans=state.responses[tq]
+    tiles+='<div class="r-tile" data-goto="'+tq+'" style="background:'+(ans?OPT_BG[ans]:'#fef3c7')+';border-color:'+(ans?'transparent':'#f59e0b')+';border-width:'+(ans?'1.5px':'2px')+'">' +
+      '<span class="r-tile-qno" style="color:'+(ans?OPT_TXT[ans]:OPT_TXT.skip)+'">'+tq+'</span>' +
+      '<span class="r-tile-ans" style="color:'+(ans?OPT_TXT[ans]:OPT_TXT.skip)+'">'+(ans||'?')+'</span>' +
+    '</div>'
+  }
+
+  var legend=OPTIONS.map(function(opt){
+    return '<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#5B6375;">' +
+      '<span style="padding:2px 7px;border-radius:20px;background:'+OPT_BG[opt]+';color:'+OPT_TXT[opt]+';font-size:10px;font-weight:800;">'+opt+'</span>'+opt+
+    '</span>'
+  }).join('')
+  legend+='<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#5B6375;">' +
+    '<span style="padding:2px 7px;border-radius:20px;background:#fef3c7;border:1.5px solid #f59e0b;color:#92400e;font-size:10px;font-weight:800;">?</span>Not entered' +
+  '</span>'
+
+  return '<div style="background:#F7F3EA;min-height:100vh;padding-bottom:72px;">' +
+    '<div class="sticky-head">' +
+      '<div class="wrap" style="padding-top:10px;padding-bottom:10px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+          '<div>' +
+            '<h2 style="font-size:15px;font-weight:800;color:var(--c-on-accent);">Review Your Responses</h2>' +
+            '<p style="font-size:12px;color:var(--c-on-accent);opacity:.6;">'+APP_CONFIG.examPaper+' &mdash; Set '+state.paperCode+'</p>' +
+          '</div>' +
+          '<div style="text-align:right;">' +
+            '<p style="font-size:13px;font-weight:700;color:#4ade80;">'+answered+' answered</p>' +
+            (unanswered>0?'<p style="font-size:11px;color:#fbbf24;">'+unanswered+' unanswered</p>':'') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="wrap" style="padding-top:12px;">' +
+      '<div class="card">' +
+        '<p style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Paper Set</p>' +
+        (state.editPaperReview
+          ? '<div style="display:flex;gap:8px;margin-top:4px;">' +
+              OPTIONS.map(function(code){
+                var sel=code===state.paperCode
+                return '<button data-setpaper-review="'+code+'" style="width:52px;height:52px;border-radius:12px;font-family:\'Playfair Display\',serif;font-size:24px;font-weight:700;border:2px solid '+(sel?P:'#E6E0D5')+';background:'+(sel?P:'white')+';color:'+(sel?'white':'#1A1D2B')+';cursor:pointer;">'+code+'</button>'
+              }).join('') +
+            '</div>'
+          : '<div style="display:flex;align-items:flex-end;gap:10px;">' +
+              '<span style="font-family:\'Playfair Display\',serif;font-size:52px;font-weight:700;color:#0B1929;line-height:1;">'+state.paperCode+'</span>' +
+              '<button id="edit-paper-review" style="background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:'+P+';padding-bottom:6px;">Edit</button>' +
+            '</div>'
+        ) +
+      '</div>' +
+      '<div class="card">' +
+        '<p style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Response Summary</p>' +
+        '<div class="summ-bar">'+summBars+'</div>' +
+      '</div>' +
+      (unanswered>0
+        ? '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 16px;margin-bottom:12px;">' +
+          '<p style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px;">'+unanswered+' question'+(unanswered>1?'s':'')+' not entered &mdash; 0 marks each</p>' +
+          '<p style="font-size:11px;color:#b45309;line-height:1.6;">'+uList.join(', ')+'</p>' +
+          '<p style="font-size:11px;color:#d97706;margin-top:6px;">Tap any tile below to go back and fill.</p>' +
+        '</div>'
+        : ''
+      ) +
+      '<div class="card">' +
+        '<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;">'+tiles+'</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--c-accent-bg);">'+legend+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="bottom-nav"><div class="bottom-inner">' +
+      '<button id="back-btn" class="btn-sm btn-outline">&#8592; Back</button>' +
+      '<button id="submit-btn" style="flex:1;padding:12px;background:'+P+';color:white;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;">Confirm &amp; Submit</button>' +
+    '</div></div>' +
+  '</div>'
+}
+
+
+// ── Result ───────────────────────────────────────────────────────────────────
+function renderResult(){
+  var instKs=INSTITUTES_KEYS.filter(function(k){return !isKeyEmpty(k)})
+  var avail=instKs.concat(!isKeyEmpty(OFFICIAL_KEY)?[OFFICIAL_KEY]:[])
+
+  var rows=avail.length>0?buildRows(avail):[]
+  if(state.sortCol!==null){
+    rows.sort(function(a,b){
+      var av=a[state.sortCol],bv=b[state.sortCol]
+      if(av<bv) return -state.sortDir
+      if(av>bv) return state.sortDir
+      return 0
+    })
+  }
+
+  function sortArrow(col){
+    if(state.sortCol!==col) return ''
+    return state.sortDir===1?' &#8593;':' &#8595;'
+  }
+  function sArr(col){return col===state.subjSortCol?(state.subjSortDir===1?' &#8593;':' &#8595;'):''}
+  function aArr(col){return col===state.accSortCol?(state.accSortDir===1?' &#8593;':' &#8595;'):''}
+
+  // ── Score summary table ───────────────────────────────────────────────────────
+  var scoreRows=''
+  ;[].concat(INSTITUTES_KEYS,[OFFICIAL_KEY]).forEach(function(key){
+    var isOff=key.isOfficial
+    var nameCellStyle='padding:11px 14px;font-family:\'DM Sans\',sans-serif;font-weight:'+(isOff?'700':'600')+';color:'+(isOff?'#1e40af':'#1C1510')+';vertical-align:middle;'
+    if(isKeyEmpty(key)){
+      scoreRows+=
+        '<tr style="border-bottom:1px solid #E8E4DF;">' +
+          '<td style="'+nameCellStyle+'">'+key.name+(isOff?' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;margin-left:6px;">UPSC</span>':'')+'</td>' +
+          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:#9CA3AF;letter-spacing:.5px;" colspan="4">'+(isOff?'&#9203; Official UPSC key not yet released':'&#9203; Institute has to upload the answer key')+'</td>' +
+        '</tr>'
+    }else{
+      var s=calcScore(key)
+      scoreRows+=
+        '<tr style="border-bottom:1px solid #E8E4DF;">' +
+          '<td style="'+nameCellStyle+'">'+key.name+(isOff?' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;margin-left:6px;">UPSC</span>':'')+'</td>' +
+          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:'+(isOff?'#1e40af':P)+';">'+s.score.toFixed(2)+'<span style="font-size:10px;font-weight:600;color:#9CA3AF;margin-left:2px;">/200</span></td>' +
+          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#15803d;">'+s.correct+'</td>' +
+          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#dc2626;">'+s.wrong+'</td>' +
+          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#9CA3AF;">'+s.skip+'</td>' +
+        '</tr>'
+    }
+  })
+  var cards='<div style="background:#fff;border-radius:14px;border:1px solid #E6E0D5;box-shadow:0 2px 12px rgba(11,25,41,.07);overflow:hidden;">' +
+    '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead>' +
+        '<tr>' +
+          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:left;padding:10px 14px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-on-accent);">Institute</th>' +
+          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-on-accent);">Score</th>' +
+          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#10003; Correct</th>' +
+          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#10007; Wrong</th>' +
+          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#8212; Skipped</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody>'+scoreRows+'</tbody>' +
+    '</table>' +
+  '</div>'
+
+  // ── Table section ─────────────────────────────────────────────────────────────
+  var tableSection='',subjectSection='',accuracySection=''
+  if(avail.length>0){
+    var hasQData=QUESTIONS.questions.length>0
+
+    var instAvail=instKs.length>0,offAvail=!isKeyEmpty(OFFICIAL_KEY)
+    var tv=state.tableView
+    var selIdx=Math.min(state.selectedInstituteIdx,INSTITUTES_KEYS.length-1)
+    var activeKey=tv===1?OFFICIAL_KEY:INSTITUTES_KEYS[selIdx]
+    var activeKeyAvail=tv===1?offAvail:(instAvail&&!isKeyEmpty(INSTITUTES_KEYS[selIdx]))
+
+    var s0=tv===0,s1=tv===1
+    var keyBtnSection=
+      '<div style="max-width:860px;margin:0 auto;padding:0 16px 14px;display:flex;gap:10px;">' +
+        '<button data-view="0" style="flex:1;padding:13px 16px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:2px solid '+(s0?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:10px;cursor:pointer;background:'+(s0?'var(--c-accent)':'white')+';color:'+(s0?'var(--c-on-accent)':'var(--c-accent-dark)')+';">&#9679; Institute Key</button>' +
+        '<button data-view="1" style="flex:1;padding:13px 16px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:2px solid '+(s1?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:10px;cursor:pointer;background:'+(s1?'var(--c-accent)':'white')+';color:'+(s1?'var(--c-on-accent)':'var(--c-accent-dark)')+';">&#9632; Official UPSC Key</button>' +
+      '</div>' +
+      (tv===0&&INSTITUTES_KEYS.length>1
+        ?'<div style="max-width:860px;margin:0 auto;padding:2px 16px 10px;display:flex;gap:6px;flex-wrap:wrap;">' +
+            INSTITUTES_KEYS.map(function(k,i){
+              var sel=i===selIdx
+              return '<button data-inst-idx="'+i+'" style="padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1.5px solid '+(sel?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:4px;cursor:pointer;background:'+(sel?'var(--c-accent)':'white')+';color:'+(sel?'var(--c-on-accent)':'var(--c-accent-text-dark)')+';">'+k.name+'</button>'
+            }).join('')+
+          '</div>'
+        :'') +
+      '<div style="max-width:860px;margin:0 auto;padding:0 16px 10px;">' +
+        '<p style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#9CA3AF;letter-spacing:.5px;">&#9432; All tables are sortable. Click any column header to sort &#8593; or &#8595;.</p>' +
+      '</div>'
+
+    var showQChk=hasQData
+      ? '<label style="display:flex;align-items:center;gap:8px;font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-accent-text-dark);cursor:pointer;user-select:none;">' +
+          '<input type="checkbox" id="show-questions-chk"'+(state.showQuestions?' checked':'')+' style="accent-color:var(--c-accent);width:14px;height:14px;cursor:pointer;">' +
+          'Show Questions' +
+        '</label>'
+      : ''
+
+    var subjectMap={}
+    QUESTIONS.questions.forEach(function(q){
+      if(q.subject_group&&!subjectMap[q.subject_group]) subjectMap[q.subject_group]=q.subject_group
+    })
+    var subjectBtns=hasQData
+      ? (function(){
+          var sgs=Object.keys(subjectMap).sort()
+          var mkBtn=function(sg,lbl){var a=state.filterSubject===sg;return '<button data-subject="'+sg+'" style="padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1.5px solid '+(a?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:4px;cursor:pointer;background:'+(a?'var(--c-accent)':'white')+';color:'+(a?'var(--c-on-accent)':'var(--c-accent-text-dark)') +';">'+(lbl||sg)+'</button>'}
+          return '<div style="display:grid;grid-template-columns:min-content 1fr 1fr;column-gap:12px;padding-bottom:8px;border-bottom:1px solid #E8E4DF;margin-bottom:8px;">' +
+            '<div style="display:flex;align-items:flex-start;">'+mkBtn('all','All')+'</div>' +
+            '<div style="grid-column:span 2;display:flex;gap:5px;flex-wrap:wrap;">'+sgs.map(function(sg){return mkBtn(sg)}).join('')+'</div>' +
+            '</div>'
+        })()
+      : ''
+
+    var statsKey=activeKeyAvail?activeKey:(instKs[0]||OFFICIAL_KEY)
+    var singleRows=buildRows([statsKey])
+    // Subject stats computed from unfiltered rows
+    var subjStats={},subjOrder=[]
+    singleRows.forEach(function(row){
+      var qd=null
+      for(var i=0;i<QUESTIONS.questions.length;i++){if(QUESTIONS.questions[i].number===row.c){qd=QUESTIONS.questions[i];break}}
+      if(!qd||!qd.subject_group) return
+      var sg=qd.subject_group
+      if(!subjStats[sg]){subjStats[sg]={name:sg,total:0,correct:0,wrong:0,skip:0};subjOrder.push(sg)}
+      subjStats[sg].total++
+      if(row.kr0==='correct') subjStats[sg].correct++
+      else if(row.kr0==='wrong') subjStats[sg].wrong++
+      else subjStats[sg].skip++
+    })
+    subjOrder.sort()
+    var subjectRows=singleRows
+    if(state.filterSubject!=='all'){
+      subjectRows=singleRows.filter(function(row){
+        var qd=null
+        for(var fi=0;fi<QUESTIONS.questions.length;fi++){if(QUESTIONS.questions[fi].number===row.c){qd=QUESTIONS.questions[fi];break}}
+        return qd&&qd.subject_group===state.filterSubject
+      })
+    }
+    var sCnt={all:subjectRows.length,correct:0,wrong:0,skipped:0}
+    subjectRows.forEach(function(row){
+      if(row.kr0==='correct') sCnt.correct++
+      else if(row.kr0==='wrong') sCnt.wrong++
+      else if(row.kr0==='skip') sCnt.skipped++
+    })
+    var statusPills=[['all','All',sCnt.all],['correct','Correct',sCnt.correct],['wrong','Incorrect',sCnt.wrong],['skipped','Unattempted',sCnt.skipped]].map(function(v){
+      var a=state.filterStatus===v[0]
+      return '<button data-status="'+v[0]+'" style="padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1.5px solid '+(a?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:4px;cursor:pointer;background:'+(a?'var(--c-accent)':'white')+';color:'+(a?'var(--c-on-accent)':'var(--c-accent-text-dark)')+';">'+v[1]+' ('+v[2]+')</button>'
+    }).join('')
+    singleRows=subjectRows
+    if(state.filterStatus!=='all'){
+      singleRows=subjectRows.filter(function(row){
+        if(state.filterStatus==='correct') return row.kr0==='correct'
+        if(state.filterStatus==='wrong') return row.kr0==='wrong'
+        if(state.filterStatus==='skipped') return row.kr0==='skip'
+        return true
+      })
+    }
+    if(state.sortCol!==null){
+      singleRows.sort(function(a,b){
+        var av=a[state.sortCol],bv=b[state.sortCol]
+        if(av<bv) return -state.sortDir
+        if(av>bv) return state.sortDir
+        return 0
+      })
+    }
+
+    var keyLabel=activeKey.isOfficial?'Official Key':'Institute Key'
+    var showQ=state.showQuestions&&hasQData
+    var sthead='<tr>' +
+      '<th data-col="q" style="width:52px;">Q#'+sortArrow('q')+'</th>' +
+      (showQ?'<th style="font-family:\'JetBrains Mono\',monospace;">Question</th>':'') +
+      '<th data-col="s" style="width:72px;text-align:center;">Your Ans'+sortArrow('s')+'</th>' +
+      '<th data-col="ka0" style="width:72px;text-align:center;">Key'+sortArrow('ka0')+'</th>' +
+      '<th data-col="kr0" style="width:90px;text-align:center;">Result'+sortArrow('kr0')+'</th>' +
+    '</tr>'
+
+    var stbody=''
+    singleRows.forEach(function(row){
+      var kr=row['kr0']
+      var kc=kr==='correct'?'t-correct':kr==='wrong'?'t-wrong':kr==='dropped'?'t-dropped':'t-skip'
+      var kl=kr==='correct'?'&#10003; Correct':kr==='wrong'?'&#10007; Wrong':kr==='dropped'?'Dropped':'&mdash;'
+      var qCell=''
+      if(showQ){
+        var qData=null
+        for(var qi=0;qi<QUESTIONS.questions.length;qi++){
+          if(QUESTIONS.questions[qi].number===row.c){qData=QUESTIONS.questions[qi];break}
+        }
+        if(qData){
+          var qcHtml=''
+          qcHtml+='<div class="cq-lead">'+qData.question+'</div>'
+          if(qData.statements&&qData.statements.length){
+            qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){return '<li>'+st+'</li>'}).join('')+'</ul>'
+          }
+          if(qData.assertion_reason){
+            var ar=qData.assertion_reason
+            qcHtml+='<div class="cq-assertion"><b>Statement I:</b> '+(ar.A||ar.assertion||'')+'<br><b>Statement II:</b> '+(ar.R||ar.reason||'')+'</div>'
+          }
+          if(qData.table&&qData.table.headers){
+            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+qData.table.headers.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+qData.table.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
+          }
+          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+qData.question_tail+'</div>'
+          qcHtml+='<div class="cq-options">'+OPTIONS.map(function(opt){
+            if(!qData.options[opt]) return ''
+            return '<div class="cq-option"><span class="cq-opt-key">'+opt+'</span><span>'+qData.options[opt]+'</span></div>'
+          }).join('')+'</div>'
+          qCell='<td class="cq-wrap">'+qcHtml+'</td>'
+        }else{
+          qCell='<td class="cq-wrap">&mdash;</td>'
+        }
+      }
+      var rowBg=kr==='correct'?'#f0fdf4':kr==='wrong'?'#fef2f2':''
+      stbody+='<tr'+(rowBg?' style="background:'+rowBg+';"':'')+'>'+
+        '<td style="font-family:\'Playfair Display\',serif;font-weight:700;color:var(--c-accent);font-size:1.1rem;text-align:center;width:52px;overflow:hidden;vertical-align:top;">'+row.q+'</td>' +
+        qCell +
+        '<td style="font-weight:700;font-family:\'JetBrains Mono\',monospace;font-size:1rem;text-align:center;width:72px;overflow:hidden;vertical-align:top;">'+row.s+'</td>' +
+        '<td style="font-family:\'JetBrains Mono\',monospace;font-weight:700;text-align:center;width:72px;overflow:hidden;vertical-align:top;">'+row['ka0']+'</td>' +
+        '<td class="'+kc+'" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:.5px;text-align:center;width:90px;overflow:hidden;vertical-align:top;">'+kl+'</td>' +
+      '</tr>'
+    })
+
+    tableSection='<div class="bk-card">' +
+      '<div class="bk-hd" style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<span class="bk-title">Question-wise Breakdown</span>' +
+        '<button id="q-toggle" style="background:rgba(0,0,0,.12);border:1px solid var(--c-on-accent);border-radius:6px;padding:4px 10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;color:var(--c-on-accent);cursor:pointer;line-height:1;letter-spacing:.5px;">'+(state.qTableCollapsed?'&#9660; Show':'&#9650; Hide')+'</button>' +
+      '</div>' +
+      (state.qTableCollapsed?'':
+        (activeKeyAvail
+          ? '<div class="bk-filt" style="flex-direction:column;align-items:flex-start;">' +
+              subjectBtns +
+              '<div style="display:flex;gap:5px;flex-wrap:wrap;">'+statusPills+'</div>' +
+            '</div>' +
+            (hasQData?'<div style="padding:10px 16px;border-bottom:1px solid var(--c-accent-divider);">'+showQChk+'</div>':'')
+          : '') +
+        (activeKeyAvail
+          ? '<div class="tbl-wrap"><table'+(showQ?'':' class="tbl-fixed"')+'><thead>'+sthead+'</thead><tbody>'+stbody+'</tbody></table></div>'
+          : '<div style="padding:28px 20px;text-align:center;"><p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;line-height:1.8;">&#9203; '+(tv===1?'Official UPSC key':'Institute key')+' not yet released.<br>Will be updated once published. Come back later &amp; refresh the page to see your results.</p></div>')) +
+    '</div>'
+
+    var sList=subjOrder.slice()
+    if(state.subjSortCol){
+      sList.sort(function(a,b){
+        var sa=subjStats[a],sb=subjStats[b],va,vb
+        if(state.subjSortCol==='total'){va=sa.total;vb=sb.total}
+        else if(state.subjSortCol==='correct'){va=sa.correct;vb=sb.correct}
+        else if(state.subjSortCol==='wrong'){va=sa.wrong;vb=sb.wrong}
+        else if(state.subjSortCol==='skip'){va=sa.skip;vb=sb.skip}
+        else if(state.subjSortCol==='attPct'){va=sa.total>0?(sa.correct+sa.wrong)/sa.total:0;vb=sb.total>0?(sb.correct+sb.wrong)/sb.total:0}
+        return state.subjSortDir*(va-vb)
+      })
+    }
+    var sbody=sList.map(function(sid){
+      var st=subjStats[sid]
+      var attempted=st.correct+st.wrong
+      var attPct=st.total>0?(attempted/st.total*100).toFixed(1):0
+      var attColor=attPct>=70?'#15803d':attPct>=40?'var(--c-accent)':'#dc2626'
+      return '<tr>' +
+        '<td style="font-family:\'DM Sans\',sans-serif;font-weight:600;color:#1C1510;padding:11px 16px;vertical-align:middle;">'+st.name+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#1C1510;">'+st.total+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#15803d;">'+st.correct+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#dc2626;">'+st.wrong+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#9CA3AF;">'+st.skip+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:'+attColor+';">'+attPct+'%</td>' +
+      '</tr>'
+    }).join('')
+    if(PAPER_CONFIG.paper!=='CSAT') subjectSection='<div class="bk-card" style="margin-bottom:14px;">' +
+      '<div class="bk-hd" style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<span class="bk-title">Subject-wise Attempt Breakdown</span>' +
+        '<button id="subj-toggle" style="background:rgba(0,0,0,.12);border:1px solid var(--c-on-accent);border-radius:6px;padding:4px 10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;color:var(--c-on-accent);cursor:pointer;line-height:1;letter-spacing:.5px;">'+(state.subjTableCollapsed?'&#9660; Show':'&#9650; Hide')+'</button>' +
+      '</div>' +
+      (state.subjTableCollapsed?'':
+        (activeKeyAvail
+          ? '<div class="tbl-wrap"><table>' +
+              '<thead><tr>' +
+                '<th style="text-align:left;white-space:normal;">Subject</th>' +
+                '<th data-scol="total" style="text-align:center;white-space:normal;cursor:pointer;">Total<br>Qs'+sArr('total')+'</th>' +
+                '<th data-scol="correct" style="text-align:center;white-space:normal;cursor:pointer;">&#10003;'+sArr('correct')+'</th>' +
+                '<th data-scol="wrong" style="text-align:center;white-space:normal;cursor:pointer;">&#10007;'+sArr('wrong')+'</th>' +
+                '<th data-scol="skip" style="text-align:center;white-space:normal;cursor:pointer;">Not<br>Attempted'+sArr('skip')+'</th>' +
+                '<th data-scol="attPct" style="text-align:center;white-space:normal;cursor:pointer;">Attempt<br>%'+sArr('attPct')+'</th>' +
+              '</tr></thead>' +
+              '<tbody>'+sbody+'</tbody>' +
+            '</table></div>'
+          : '<div style="padding:28px 20px;text-align:center;"><p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;line-height:1.8;">&#9203; '+(tv===1?'Official UPSC key':'Institute key')+' not yet released.<br>Will be updated once published. Come back later &amp; refresh the page to see your results.</p></div>')) +
+    '</div>'
+
+    var aList=subjOrder.slice()
+    if(state.accSortCol){
+      aList.sort(function(a,b){
+        var sa=subjStats[a],sb=subjStats[b],va,vb
+        if(state.accSortCol==='total'){va=sa.total;vb=sb.total}
+        else if(state.accSortCol==='correct'){va=sa.correct;vb=sb.correct}
+        else if(state.accSortCol==='wrong'){va=sa.wrong;vb=sb.wrong}
+        else if(state.accSortCol==='accPct'){va=sa.total>0?sa.correct/sa.total:0;vb=sb.total>0?sb.correct/sb.total:0}
+        return state.accSortDir*(va-vb)
+      })
+    }
+    var abody=aList.map(function(sid){
+      var st=subjStats[sid]
+      var pct=st.total>0?(st.correct/st.total*100).toFixed(1):0
+      var pctColor=pct>=70?'#15803d':pct>=40?'var(--c-accent)':'#dc2626'
+      return '<tr>' +
+        '<td style="font-family:\'DM Sans\',sans-serif;font-weight:600;color:#1C1510;padding:11px 16px;vertical-align:middle;">'+st.name+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#1C1510;">'+st.total+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#15803d;">'+st.correct+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#dc2626;">'+st.wrong+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-weight:800;color:'+pctColor+';">'+pct+'%</td>' +
+      '</tr>'
+    }).join('')
+    if(PAPER_CONFIG.paper!=='CSAT') accuracySection='<div class="bk-card" style="margin-bottom:14px;">' +
+      '<div class="bk-hd" style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<span class="bk-title">Subject-wise Accuracy Breakdown</span>' +
+        '<button id="acc-toggle" style="background:rgba(0,0,0,.12);border:1px solid var(--c-on-accent);border-radius:6px;padding:4px 10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;color:var(--c-on-accent);cursor:pointer;line-height:1;letter-spacing:.5px;">'+(state.accTableCollapsed?'&#9660; Show':'&#9650; Hide')+'</button>' +
+      '</div>' +
+      (state.accTableCollapsed?'':
+        (activeKeyAvail
+          ? '<div class="tbl-wrap"><table>' +
+              '<thead><tr>' +
+                '<th style="text-align:left;white-space:normal;">Subject</th>' +
+                '<th data-acol="total" style="text-align:center;white-space:normal;cursor:pointer;">Total<br>Qs'+aArr('total')+'</th>' +
+                '<th data-acol="correct" style="text-align:center;white-space:normal;cursor:pointer;">&#10003;'+aArr('correct')+'</th>' +
+                '<th data-acol="wrong" style="text-align:center;white-space:normal;cursor:pointer;">&#10007;'+aArr('wrong')+'</th>' +
+                '<th data-acol="accPct" style="text-align:center;white-space:normal;cursor:pointer;">Accuracy<br>%'+aArr('accPct')+'</th>' +
+              '</tr></thead>' +
+              '<tbody>'+abody+'</tbody>' +
+            '</table></div>'
+          : '<div style="padding:28px 20px;text-align:center;"><p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;line-height:1.8;">&#9203; '+(tv===1?'Official UPSC key':'Institute key')+' not yet released.<br>Will be updated once published. Come back later &amp; refresh the page to see your results.</p></div>')) +
+    '</div>'
+  } else {
+    var pendingInstMsg=instKs.length===0?'Institute keys not yet uploaded.':''
+    var pendingOffMsg=isKeyEmpty(OFFICIAL_KEY)?'Official UPSC key not yet released.':''
+    var pendingMsgs=[pendingInstMsg,pendingOffMsg].filter(Boolean).join(' ')
+    tableSection='<div class="bk-card">' +
+      '<div class="bk-hd"><span class="bk-title">Analysis Unavailable</span></div>' +
+      '<div style="padding:28px 20px;text-align:center;">' +
+        '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;line-height:1.8;">&#9203; '+pendingMsgs+'<br>Come back after the key is released &amp; refresh the page to see your results.</p>' +
+      '</div>' +
+    '</div>'
+  }
+
+  return '<div style="background:#F7F3EA;min-height:100vh;">' +
+    '<div style="background:var(--c-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);">' +
+      '<div style="max-width:860px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+        '<div>' +
+          '<h1 style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:var(--c-on-accent);line-height:1.2;">'+APP_CONFIG.name+'</h1>' +
+          '<p style="font-size:12px;color:var(--c-on-accent);opacity:.6;margin-top:2px;">'+APP_CONFIG.examName+' &mdash; '+APP_CONFIG.examPaper+' &mdash; <span style="font-family:\'JetBrains Mono\',monospace;font-weight:700;color:var(--c-on-accent);">Set '+state.paperCode+'</span></p>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">' +
+          (avail.length>0?'<button id="dl-btn" class="btn-sm" style="border:1.5px solid var(--c-on-accent);color:var(--c-on-accent);background:rgba(0,0,0,.12);">&#8595; Download</button>':'') +
+          '<button id="edit-responses-btn" style="background:rgba(0,0,0,.12);border:1px solid var(--c-on-accent);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--c-on-accent);cursor:pointer;white-space:nowrap;">&#9998; Edit</button>' +
+          '<button id="logout-btn" style="background:rgba(0,0,0,.12);border:1px solid var(--c-on-accent);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--c-on-accent);cursor:pointer;white-space:nowrap;">&#8592; Home</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="max-width:860px;margin:0 auto;padding:20px 16px 14px;">'+cards+'</div>' +
+    (avail.length>0
+      ? '<div style="max-width:860px;margin:0 auto;padding:0 16px 10px;">' +
+          '<div style="background:#fff7ed;border:1.5px solid '+P+';border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
+            '<div>' +
+              '<p style="font-size:13px;font-weight:700;color:'+P+';margin-bottom:2px;">Save your result</p>' +
+              '<p style="font-size:11px;color:'+P+';opacity:.75;line-height:1.5;">Download to review anytime, even without internet.</p>' +
+            '</div>' +
+            '<button id="dl-btn-banner" style="flex-shrink:0;padding:9px 16px;background:'+P+';color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8595;&nbsp;Download</button>' +
+          '</div>' +
+        '</div>'
+      : '') +
+    (avail.length>0?keyBtnSection:'') +
+    '<div style="max-width:860px;margin:0 auto;padding:0 16px 40px;">'+subjectSection+accuracySection+tableSection+
+      '<p style="text-align:center;font-size:11px;color:#9CA3AF;margin-top:20px;">'+APP_CONFIG.name+' &middot; '+APP_CONFIG.contactEmail+'</p>' +
+      '<div style="text-align:center;margin-top:16px;">' +
+        '<a href="'+(PAPER_CONFIG.paper==='GS'?'/csat':'/gs1')+'" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:'+P+';color:#fff;border-radius:10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">' +
+          'Check '+(PAPER_CONFIG.paper==='GS'?'CSAT Paper 2':'GS Paper 1')+' <span style="font-size:14px;">&#8594;</span>' +
+        '</a>' +
+      '</div>' +
+    '</div>' +
+  '</div>'
+}
+
+// ── Event binding ────────────────────────────────────────────────────────────
+function bind(){
+  qsa('[data-paper]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.paper;render()})})
+  on('edit-paper-entry','click',function(){state.editingPaper=true;render()})
+  qsa('[data-setpaper-entry]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.setpaperEntry;state.editingPaper=false;render()})})
+  on('edit-paper-review','click',function(){state.editPaperReview=true;render()})
+  qsa('[data-setpaper-review]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.setpaperReview;state.editPaperReview=false;render()})})
+  on('start-btn','click',function(){if(!state.paperCode)return;state.screen='entry';state.page=1;render()})
+  on('view-result-btn','click',function(){state.screen='result';top0();render()})
+  on('new-attempt-btn','click',function(){state.confirmingNewAttempt=true;render()})
+  on('confirm-new-attempt-yes','click',function(){
+    try{localStorage.removeItem(STORE_KEY)}catch(e){}
+    scoreSent=false
+    state.screen='landing';state.paperCode=null;state.responses={};state.page=1
+    state.sortCol=null;state.sortDir=1;state.editingPaper=false;state.editPaperReview=false;state.confirmingNewAttempt=false
+    state.showQuestions=false;state.filterSubject='all';state.filterStatus='all'
+    state.subjSortCol=null;state.subjSortDir=-1;state.accSortCol=null;state.accSortDir=-1
+    render()
+  })
+  on('confirm-new-attempt-no','click',function(){state.confirmingNewAttempt=false;render()})
+
+  qsa('[data-q][data-opt]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var q=parseInt(b.dataset.q),opt=b.dataset.opt
+      if(state.responses[q]===opt) delete state.responses[q]
+      else state.responses[q]=opt
+      render()
+    })
+  })
+  on('prev-btn','click',function(){if(state.page>1){state.page--;top0();render()}})
+  on('next-btn','click',function(){state.page++;top0();render()})
+  on('review-btn','click',function(){state.editingPaper=false;state.screen='review';top0();render()})
+  on('to-review','click',function(){state.editingPaper=false;state.screen='review';top0();render()})
+  qsa('[data-pg]').forEach(function(b){b.addEventListener('click',function(){state.page=parseInt(b.dataset.pg);top0();render()})})
+
+  qsa('[data-goto]').forEach(function(t){
+    t.addEventListener('click',function(){
+      var q=parseInt(t.dataset.goto)
+      state.page=Math.ceil(q/PER_PAGE);state.screen='entry';top0();render()
+    })
+  })
+  on('back-btn','click',function(){state.editPaperReview=false;state.screen='entry';state.page=1;top0();render()})
+  on('submit-btn','click',function(){state.editPaperReview=false;state.screen='result';top0();render()})
+
+  qsa('th[data-col]').forEach(function(th){
+    th.addEventListener('click',function(){
+      var col=th.dataset.col
+      if(state.sortCol===col) state.sortDir=-state.sortDir
+      else{state.sortCol=col;state.sortDir=1}
+      render()
+    })
+  })
+  qsa('[data-view]').forEach(function(b){b.addEventListener('click',function(){
+    var tv=parseInt(b.dataset.view)
+    state.tableView=tv
+    render()
+  })})
+  qsa('[data-inst-idx]').forEach(function(b){b.addEventListener('click',function(){
+    state.selectedInstituteIdx=parseInt(b.dataset.instIdx)
+    render()
+  })})
+  on('dl-btn','click',downloadResult)
+  on('dl-btn-banner','click',downloadResult)
+  on('edit-responses-btn','click',function(){state.screen='entry';state.page=1;top0();render()})
+  on('logout-btn','click',function(){
+    state.screen='landing';top0();render()
+  })
+  var showQEl=document.getElementById('show-questions-chk')
+  if(showQEl) showQEl.addEventListener('change',function(){state.showQuestions=this.checked;render()})
+  qsa('[data-subject]').forEach(function(b){b.addEventListener('click',function(){state.filterSubject=b.dataset.subject;render()})})
+  qsa('[data-status]').forEach(function(b){b.addEventListener('click',function(){state.filterStatus=b.dataset.status;render()})})
+  on('subj-toggle','click',function(){state.subjTableCollapsed=!state.subjTableCollapsed;render()})
+  on('acc-toggle','click',function(){state.accTableCollapsed=!state.accTableCollapsed;render()})
+  on('q-toggle','click',function(){state.qTableCollapsed=!state.qTableCollapsed;render()})
+  qsa('[data-scol]').forEach(function(b){b.addEventListener('click',function(){
+    var col=b.dataset.scol
+    if(state.subjSortCol===col) state.subjSortDir*=-1
+    else{state.subjSortCol=col;state.subjSortDir=-1}
+    render()
+  })})
+  qsa('[data-acol]').forEach(function(b){b.addEventListener('click',function(){
+    var col=b.dataset.acol
+    if(state.accSortCol===col) state.accSortDir*=-1
+    else{state.accSortCol=col;state.accSortDir=-1}
+    render()
+  })})
+}
+
+function qsa(s){return Array.from(document.querySelectorAll(s))}
+function on(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn)}
+function top0(){window.scrollTo(0,0)}
+
+// ── Download ─────────────────────────────────────────────────────────────────
+function downloadResult(){
+  var snap=JSON.stringify({
+    screen:'result',
+    paperCode:state.paperCode,
+    responses:state.responses,
+    page:state.page,
+    sortCol:state.sortCol,
+    sortDir:state.sortDir,
+    tableView:state.tableView,
+    showQuestions:state.showQuestions,
+    filterSubject:state.filterSubject,
+    filterStatus:state.filterStatus,
+    subjTableCollapsed:state.subjTableCollapsed,
+    accTableCollapsed:state.accTableCollapsed,
+    qTableCollapsed:state.qTableCollapsed,
+    subjSortCol:state.subjSortCol,
+    subjSortDir:state.subjSortDir,
+    accSortCol:state.accSortCol,
+    accSortDir:state.accSortDir,
+    selectedInstituteIdx:state.selectedInstituteIdx
+  }).replace(/<\//g,'<\\/')
+
+  var src=document.documentElement.outerHTML
+  var inject='<script>window.__DL_STATE__='+snap+';<\/script>'
+  src=src.replace('<\/head>',inject+'<\/head>')
+
+  var blob=new Blob([src],{type:'text/html'})
+  var url=URL.createObjectURL(blob)
+  var a=document.createElement('a')
+  a.href=url;a.download='score-result-set'+state.paperCode+'.html'
+  document.body.appendChild(a);a.click()
+  document.body.removeChild(a);URL.revokeObjectURL(url)
+}
+
+function hexToHSL(hex) {
+  var r=parseInt(hex.slice(1,3),16)/255
+  var g=parseInt(hex.slice(3,5),16)/255
+  var b=parseInt(hex.slice(5,7),16)/255
+  var max=Math.max(r,g,b), min=Math.min(r,g,b)
+  var l=(max+min)/2, s=0, h=0
+  if(max!==min){
+    var d=max-min
+    s=l>0.5?d/(2-max-min):d/(max+min)
+    if(max===r) h=(g-b)/d+(g<b?6:0)
+    else if(max===g) h=(b-r)/d+2
+    else h=(r-g)/d+4
+    h/=6
+  }
+  return {h:h*360, s:s*100, l:l*100}
+}
+
+function getLuminance(hex) {
+  var r=parseInt(hex.slice(1,3),16)/255
+  var g=parseInt(hex.slice(3,5),16)/255
+  var b=parseInt(hex.slice(5,7),16)/255
+  function lin(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4)}
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b)
+}
+
+function buildTheme() {
+  var hex=(APP_CONFIG.primaryColor||'').match(/^#[0-9a-fA-F]{6}$/)
+    ? APP_CONFIG.primaryColor : '#1e40af'
+  var H=Math.round(hexToHSL(hex).h)
+  function hp(name,s,l){
+    document.documentElement.style.setProperty(name,'hsl('+H+','+s+'%,'+l+'%)')
+  }
+  document.documentElement.style.setProperty('--c-accent', hex)
+  hp('--c-accent-dark',      85, 28)
+  hp('--c-accent-bg',        28, 92)
+  hp('--c-accent-border',    22, 80)
+  hp('--c-accent-border-th', 32, 68)
+  hp('--c-accent-muted',     16, 53)
+  hp('--c-accent-text-dark', 22, 28)
+  hp('--c-accent-divider',   18, 89)
+  hp('--c-accent-hover-bg',  28, 87)
+  document.documentElement.style.setProperty(
+    '--c-on-accent', getLuminance(hex)>0.40 ? '#1C1510' : '#ffffff'
+  )
+}
+
+buildTheme()
+render()
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')render()})
+window.addEventListener('pageshow',function(e){if(e.persisted)render()})
+window.addEventListener('unhandledrejection',function(){try{render()}catch(_e){}})
+</script>
+</body>
+</html>
