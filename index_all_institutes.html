@@ -554,43 +554,82 @@ function renderResult(){
   function sArr(col){return col===state.subjSortCol?(state.subjSortDir===1?' &#8593;':' &#8595;'):''}
   function aArr(col){return col===state.accSortCol?(state.accSortDir===1?' &#8593;':' &#8595;'):''}
 
-  // ── Score summary table ───────────────────────────────────────────────────────
-  var scoreRows=''
-  ;[].concat(INSTITUTES_KEYS,[OFFICIAL_KEY]).forEach(function(key){
-    var isOff=key.isOfficial
-    var nameCellStyle='padding:11px 14px;font-family:\'DM Sans\',sans-serif;font-weight:'+(isOff?'700':'600')+';color:'+(isOff?'#1e40af':'#1C1510')+';vertical-align:middle;'
-    if(isKeyEmpty(key)){
-      scoreRows+=
-        '<tr style="border-bottom:1px solid #E8E4DF;">' +
-          '<td style="'+nameCellStyle+'">'+key.name+(isOff?' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;margin-left:6px;">UPSC</span>':'')+'</td>' +
-          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:#9CA3AF;letter-spacing:.5px;" colspan="4">'+(isOff?'&#9203; Official UPSC key not yet released':'&#9203; Institute has to upload the answer key')+'</td>' +
-        '</tr>'
+  // ── Score cards (one per institute + official) ───────────────────────────────
+  var totalMarks=TOTAL_Q*PAPER_CONFIG.correctMark
+  var cards=''
+  INSTITUTES_KEYS.forEach(function(key,i){
+    var pending=isKeyEmpty(key)
+    if(pending){
+      cards+='<div class="res-card res-card--pend" style="--rc-accent:'+P+';animation-delay:'+(i*0.08)+'s">' +
+        '<div class="res-card__hd">' +
+          '<div>' +
+            '<div class="res-card__eye">Institute Key</div>' +
+            '<div class="res-card__nm">'+key.name+'</div>' +
+          '</div>' +
+          '<div class="res-card__bdg" style="border-color:#D1CAC0;color:#D1CAC0;">Pending</div>' +
+        '</div>' +
+        '<div style="padding:18px 20px;text-align:center;">' +
+          '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203; Key not yet uploaded</p>' +
+        '</div>' +
+      '</div>'
     }else{
-      var s=calcScore(key)
-      scoreRows+=
-        '<tr style="border-bottom:1px solid #E8E4DF;">' +
-          '<td style="'+nameCellStyle+'">'+key.name+(isOff?' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;margin-left:6px;">UPSC</span>':'')+'</td>' +
-          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:'+(isOff?'#1e40af':P)+';">'+s.score.toFixed(2)+'<span style="font-size:10px;font-weight:600;color:#9CA3AF;margin-left:2px;">/200</span></td>' +
-          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#15803d;">'+s.correct+'</td>' +
-          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#dc2626;">'+s.wrong+'</td>' +
-          '<td style="text-align:center;padding:11px 10px;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:#9CA3AF;">'+s.skip+'</td>' +
-        '</tr>'
+      var sc=calcScore(key)
+      cards+='<div class="res-card" style="--rc-accent:'+P+';animation-delay:'+(i*0.08)+'s">' +
+        '<div class="res-card__hd">' +
+          '<div>' +
+            '<div class="res-card__eye">Institute Key</div>' +
+            '<div class="res-card__nm">'+key.name+'</div>' +
+          '</div>' +
+          '<div class="res-card__bdg">Institute</div>' +
+        '</div>' +
+        '<div class="res-score-wrap">' +
+          '<div class="res-score">'+sc.score.toFixed(2)+'<span class="res-score-den">/'+totalMarks+'</span></div>' +
+          '<span class="res-score-exam">'+APP_CONFIG.examName+' &bull; '+APP_CONFIG.examPaper+'</span>' +
+        '</div>' +
+        '<div class="res-stats">' +
+          '<div class="res-stat res-stat--ok"><span class="res-stat__n">'+sc.correct+'</span><span class="res-stat__l">Correct</span></div>' +
+          '<div class="res-stat res-stat--ng"><span class="res-stat__n">'+sc.wrong+'</span><span class="res-stat__l">Wrong</span></div>' +
+          '<div class="res-stat res-stat--sk"><span class="res-stat__n">'+sc.skip+'</span><span class="res-stat__l">Skipped</span></div>' +
+        '</div>' +
+      '</div>'
     }
   })
-  var cards='<div style="background:#fff;border-radius:14px;border:1px solid #E6E0D5;box-shadow:0 2px 12px rgba(11,25,41,.07);overflow:hidden;">' +
-    '<table style="width:100%;border-collapse:collapse;">' +
-      '<thead>' +
-        '<tr>' +
-          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:left;padding:10px 14px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-on-accent);">Institute</th>' +
-          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-on-accent);">Score</th>' +
-          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#10003; Correct</th>' +
-          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#10007; Wrong</th>' +
-          '<th style="background:var(--c-accent);border-bottom:none;border-right:none;text-align:center;padding:10px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--c-on-accent);">&#8212; Skipped</th>' +
-        '</tr>' +
-      '</thead>' +
-      '<tbody>'+scoreRows+'</tbody>' +
-    '</table>' +
-  '</div>'
+  var offRc='#1e40af'
+  var offPending=isKeyEmpty(OFFICIAL_KEY)
+  if(offPending){
+    cards+='<div class="res-card res-card--pend" style="--rc-accent:'+offRc+';animation-delay:'+(INSTITUTES_KEYS.length*0.08)+'s">' +
+      '<div class="res-card__hd">' +
+        '<div>' +
+          '<div class="res-card__eye">Official UPSC Key</div>' +
+          '<div class="res-card__nm">UPSC Official Answer Key</div>' +
+        '</div>' +
+        '<div class="res-card__bdg" style="border-color:#D1CAC0;color:#D1CAC0;">Pending</div>' +
+      '</div>' +
+      '<div style="padding:18px 20px;text-align:center;">' +
+        '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203; Official UPSC key not yet released</p>' +
+      '</div>' +
+    '</div>'
+  }else{
+    var offSc=calcScore(OFFICIAL_KEY)
+    cards+='<div class="res-card" style="--rc-accent:'+offRc+';animation-delay:'+(INSTITUTES_KEYS.length*0.08)+'s">' +
+      '<div class="res-card__hd">' +
+        '<div>' +
+          '<div class="res-card__eye">Official UPSC Key</div>' +
+          '<div class="res-card__nm">UPSC Official Answer Key</div>' +
+        '</div>' +
+        '<div class="res-card__bdg" style="border-color:'+offRc+';color:'+offRc+'">Official</div>' +
+      '</div>' +
+      '<div class="res-score-wrap">' +
+        '<div class="res-score">'+offSc.score.toFixed(2)+'<span class="res-score-den">/'+totalMarks+'</span></div>' +
+        '<span class="res-score-exam">'+APP_CONFIG.examName+' &bull; '+APP_CONFIG.examPaper+'</span>' +
+      '</div>' +
+      '<div class="res-stats">' +
+        '<div class="res-stat res-stat--ok"><span class="res-stat__n">'+offSc.correct+'</span><span class="res-stat__l">Correct</span></div>' +
+        '<div class="res-stat res-stat--ng"><span class="res-stat__n">'+offSc.wrong+'</span><span class="res-stat__l">Wrong</span></div>' +
+        '<div class="res-stat res-stat--sk"><span class="res-stat__n">'+offSc.skip+'</span><span class="res-stat__l">Skipped</span></div>' +
+      '</div>' +
+    '</div>'
+  }
 
   // ── Table section ─────────────────────────────────────────────────────────────
   var tableSection='',subjectSection='',accuracySection=''
