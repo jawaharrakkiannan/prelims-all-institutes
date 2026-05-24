@@ -759,6 +759,7 @@ function renderResult(){
       var kl=kr==='correct'?'&#10003; Correct':kr==='wrong'?'&#10007; Wrong':kr==='dropped'?'Dropped':kr==='ambig'?'&#177; Possible':'&mdash;'
       var qCell=''
       if(showQ){
+        var itl=function(s){return (s||'').replace(/\*([^*]+)\*/g,'<em>$1</em>')}
         var qData=null
         for(var qi=0;qi<QUESTIONS.questions.length;qi++){
           if(QUESTIONS.questions[qi].number===row.c){qData=QUESTIONS.questions[qi];break}
@@ -769,40 +770,40 @@ function renderResult(){
             qcHtml+='<span class="cq-subject">'+qData.subject+'</span>'
           }
           if(qData.scenario_text){
-            qcHtml+='<div class="cq-context">'+qData.scenario_text+'</div>'
+            qcHtml+='<div class="cq-context">'+itl(qData.scenario_text)+'</div>'
           }
           if(qData.context_intro){
-            qcHtml+='<div class="cq-context">'+qData.context_intro+'</div>'
+            qcHtml+='<div class="cq-context">'+itl(qData.context_intro)+'</div>'
           }
           if(qData.assertion&&qData.assertion.text){
-            qcHtml+='<div class="cq-assertion">'+qData.assertion.text+'</div>'
+            qcHtml+='<div class="cq-assertion">'+itl(qData.assertion.text)+'</div>'
           }
-          qcHtml+='<div class="cq-lead">'+qData.question+'</div>'
+          qcHtml+='<div class="cq-lead">'+itl(qData.question)+'</div>'
           if(qData.statements&&qData.statements.length){
             qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){
-              return '<li>'+st.text+'</li>'
+              return '<li>'+itl(st.text)+'</li>'
             }).join('')+'</ul>'
           }
           if(qData.match_list){
             var ml=qData.match_list
-            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+ml.list1_header+'</th><th>'+ml.list2_header+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+p.list1_text+'</td><td>'+p.list2_number+'. '+p.list2_text+'</td></tr>'}).join('')+'</tbody></table></div>'
+            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+itl(ml.list1_header)+'</th><th>'+itl(ml.list2_header)+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+itl(p.list1_text)+'</td><td>'+p.list2_number+'. '+itl(p.list2_text)+'</td></tr>'}).join('')+'</tbody></table></div>'
           }
           if(qData.table&&qData.table.headers){
             var et=qData.table
-            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
+            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+itl(h)+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+itl(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
           }
           if(qData.secondary_stem){
-            qcHtml+='<div class="cq-lead" style="margin-top:8px;">'+qData.secondary_stem+'</div>'
+            qcHtml+='<div class="cq-lead" style="margin-top:8px;">'+itl(qData.secondary_stem)+'</div>'
           }
           if(qData.secondary_statements&&qData.secondary_statements.length){
             qcHtml+='<ul class="cq-stmts">'+qData.secondary_statements.map(function(st){
-              return '<li><span class="cq-stmt-lbl">'+st.label+'.</span>'+st.text+'</li>'
+              return '<li>'+itl(st.text)+'</li>'
             }).join('')+'</ul>'
           }
-          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+qData.question_tail+'</div>'
+          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+itl(qData.question_tail)+'</div>'
           if(qData.options&&qData.options.length){
             qcHtml+='<div class="cq-options">'+qData.options.map(function(opt){
-              return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+opt.text+'</span></div>'
+              return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+itl(opt.text)+'</span></div>'
             }).join('')+'</div>'
           }
           qCell='<td class="cq-wrap">'+qcHtml+'</td>'
