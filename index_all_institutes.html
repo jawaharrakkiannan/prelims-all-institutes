@@ -53,6 +53,7 @@ tr:hover td{background:var(--c-accent-bg)}
 .t-wrong{color:#991B1B;font-weight:700}
 .t-skip{color:#9CA3AF}
 .t-dropped{color:#D1D5DB;font-style:italic}
+.t-ambig{color:#92400e;font-weight:700}
 .cq-wrap{min-width:320px;font-size:0.9rem;vertical-align:top;padding:12px 16px}
 .cq-subject{font-family:'JetBrains Mono',monospace;color:#5C4E3C;font-size:0.65rem;letter-spacing:.5px;display:block;margin-bottom:5px}
 .cq-lead{font-family:'Lora',Georgia,serif;font-size:0.9rem;line-height:1.78;color:#0C0A07;margin-bottom:8px}
@@ -174,7 +175,15 @@ function validKey(k){
   return(n==='A'||n==='B'||n==='C'||n==='D')?n:null
 }
 
-function isKeyEmpty(key){return Object.keys(key.answers).every(function(k){return !validKey(key.answers[k])})}
+function parseKey(k){
+  if(!k) return null
+  var parts=String(k).trim().toUpperCase().split('/')
+  var valid=parts.filter(function(p){return p==='A'||p==='B'||p==='C'||p==='D'})
+  if(!valid.length) return null
+  return valid.length===1?valid[0]:valid
+}
+
+function isKeyEmpty(key){return Object.keys(key.answers).every(function(k){return !parseKey(key.answers[k])})}
 
 function canonQ(pc,q){
   if(pc==='A') return q
@@ -183,15 +192,23 @@ function canonQ(pc,q){
 }
 
 function calcScore(key){
-  var correct=0,wrong=0,skip=0
+  var correct=0,wrong=0,skip=0,ambig=0
   for(var q=1;q<=TOTAL_Q;q++){
-    var c=canonQ(state.paperCode,q),s=state.responses[q],k=validKey(key.answers[c])
+    var c=canonQ(state.paperCode,q),s=state.responses[q],k=parseKey(key.answers[c])
     if(!k) continue  // dropped — not evaluated
-    if(!s) skip++
-    else if(s===k) correct++
-    else wrong++
+    if(!s){ skip++; continue }
+    if(Array.isArray(k)){
+      if(k.indexOf(s)!==-1){ correct++; ambig++ }  // matches one option — uncertain
+      else wrong++
+    } else {
+      if(s===k) correct++
+      else wrong++
+    }
   }
-  return{correct:correct,wrong:wrong,skip:skip,score:correct*PAPER_CONFIG.correctMark-wrong*PAPER_CONFIG.wrongMark}
+  var maxScore=correct*PAPER_CONFIG.correctMark-wrong*PAPER_CONFIG.wrongMark
+  var minScore=(correct-ambig)*PAPER_CONFIG.correctMark-(wrong+ambig)*PAPER_CONFIG.wrongMark
+  return{correct:correct,wrong:wrong,skip:skip,score:maxScore,
+    minScore:ambig>0?minScore:null,maxScore:ambig>0?maxScore:null,isRange:ambig>0}
 }
 
 function buildRows(keys){
@@ -200,9 +217,15 @@ function buildRows(keys){
     var c=canonQ(state.paperCode,q),s=state.responses[q]||'-'
     var row={q:q,c:c,s:s}
     keys.forEach(function(key,i){
-      var ka=validKey(key.answers[c])
-      row['ka'+i]=ka||'&mdash;'
-      row['kr'+i]=!ka?'dropped':!state.responses[q]?'skip':state.responses[q]===ka?'correct':'wrong'
+      var ka=parseKey(key.answers[c])
+      var kaStr=Array.isArray(ka)?ka.join('/'):ka
+      row['ka'+i]=kaStr||'&mdash;'
+      var res
+      if(!ka) res='dropped'
+      else if(!state.responses[q]) res='skip'
+      else if(Array.isArray(ka)) res=ka.indexOf(state.responses[q])!==-1?'ambig':'wrong'
+      else res=state.responses[q]===ka?'correct':'wrong'
+      row['kr'+i]=res
     })
     rows.push(row)
   }
@@ -569,12 +592,12 @@ function renderResult(){
       '</tr>'
     }else{
       var sc=calcScore(key)
+      var scoreCell=sc.isRange
+        ?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:800;color:#92400e;">'+sc.minScore.toFixed(2)+'&ndash;'+sc.maxScore.toFixed(2)+'</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>'
+        :'<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#0B1929;">'+sc.score.toFixed(2)+'</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>'
       scoreRows+='<tr>' +
         '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;color:#1C1510;">'+key.name+'</td>' +
-        '<td style="text-align:center;">' +
-          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#0B1929;">'+sc.score.toFixed(2)+'</span>' +
-          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>' +
-        '</td>' +
+        '<td style="text-align:center;">'+scoreCell+'</td>' +
         '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+sc.correct+'</td>' +
         '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+sc.wrong+'</td>' +
         '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+sc.skip+'</td>' +
@@ -590,12 +613,12 @@ function renderResult(){
     '</tr>'
   }else{
     var offSc=calcScore(OFFICIAL_KEY)
+    var offScoreCell=offSc.isRange
+      ?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:800;color:#92400e;">'+offSc.minScore.toFixed(2)+'&ndash;'+offSc.maxScore.toFixed(2)+'</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>'
+      :'<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:'+offRc+';">'+offSc.score.toFixed(2)+'</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>'
     scoreRows+='<tr style="background:#EFF6FF;">' +
       '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;color:'+offRc+';">UPSC Official Answer Key</td>' +
-      '<td style="text-align:center;">' +
-        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:'+offRc+';">'+offSc.score.toFixed(2)+'</span>' +
-        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>' +
-      '</td>' +
+      '<td style="text-align:center;">'+offScoreCell+'</td>' +
       '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+offSc.correct+'</td>' +
       '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+offSc.wrong+'</td>' +
       '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+offSc.skip+'</td>' +
@@ -705,7 +728,7 @@ function renderResult(){
       singleRows=subjectRows.filter(function(row){
         if(state.filterStatus==='correct') return row.kr0==='correct'
         if(state.filterStatus==='wrong') return row.kr0==='wrong'
-        if(state.filterStatus==='skipped') return row.kr0==='skip'
+        if(state.filterStatus==='skipped') return row.kr0==='skip'||row.kr0==='ambig'
         return true
       })
     }
@@ -731,8 +754,8 @@ function renderResult(){
     var stbody=''
     singleRows.forEach(function(row){
       var kr=row['kr0']
-      var kc=kr==='correct'?'t-correct':kr==='wrong'?'t-wrong':kr==='dropped'?'t-dropped':'t-skip'
-      var kl=kr==='correct'?'&#10003; Correct':kr==='wrong'?'&#10007; Wrong':kr==='dropped'?'Dropped':'&mdash;'
+      var kc=kr==='correct'?'t-correct':kr==='wrong'?'t-wrong':kr==='dropped'?'t-dropped':kr==='ambig'?'t-ambig':'t-skip'
+      var kl=kr==='correct'?'&#10003; Correct':kr==='wrong'?'&#10007; Wrong':kr==='dropped'?'Dropped':kr==='ambig'?'&#177; Possible':'&mdash;'
       var qCell=''
       if(showQ){
         var qData=null
@@ -786,7 +809,7 @@ function renderResult(){
           qCell='<td class="cq-wrap">&mdash;</td>'
         }
       }
-      var rowBg=kr==='correct'?'#f0fdf4':kr==='wrong'?'#fef2f2':''
+      var rowBg=kr==='correct'?'#f0fdf4':kr==='wrong'?'#fef2f2':kr==='ambig'?'#fefce8':''
       stbody+='<tr'+(rowBg?' style="background:'+rowBg+';"':'')+'>'+
         '<td style="font-family:\'Playfair Display\',serif;font-weight:700;color:var(--c-accent);font-size:1.1rem;text-align:center;width:52px;overflow:hidden;vertical-align:top;">'+row.q+'</td>' +
         qCell +
@@ -929,7 +952,13 @@ function renderResult(){
         '</div>' +
       '</div>' +
     '</div>' +
-    '<div style="max-width:860px;margin:0 auto;padding:20px 16px 14px;">'+cards+'</div>' +
+    '<div style="max-width:860px;margin:0 auto;padding:12px 16px 0;">' +
+      '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;">' +
+        '<span style="font-size:16px;flex-shrink:0;">&#9993;</span>' +
+        '<p style="font-size:12px;color:#0c4a6e;line-height:1.5;margin:0;">Facing any issues with the score calculation? Mail us at <a href="mailto:'+APP_CONFIG.contactEmail+'" style="color:#0284c7;font-weight:700;text-decoration:none;">'+APP_CONFIG.contactEmail+'</a> — you\'ll receive a quick reply.</p>' +
+      '</div>' +
+    '</div>' +
+    '<div style="max-width:860px;margin:0 auto;padding:14px 16px 14px;">'+cards+'</div>' +
     (avail.length>0
       ? '<div style="max-width:860px;margin:0 auto;padding:0 16px 10px;">' +
           '<div style="background:#fff7ed;border:1.5px solid '+P+';border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +

@@ -24,6 +24,42 @@ function readJsonOptional(filePath, fallback) {
   catch (e) { console.warn(`Warning: could not parse ${filePath}: ${e.message}`); return fallback }
 }
 
+// Remap answers from a non-A paper code to Set A question numbers.
+// MUST be called before storing any key whose code != A.
+function remapToSetA(answers, code, mapping, label) {
+  const c = code ? String(code).trim().toUpperCase() : null
+  if (!c || c === 'A') return answers
+  if (c !== 'B' && c !== 'C' && c !== 'D') {
+    console.warn(`  WARNING: unknown code "${code}" in ${label} — treating as Set A`)
+    return answers
+  }
+  const codeMap = mapping[c] || {}
+  if (Object.keys(codeMap).length === 0) {
+    console.error(`\n  !! ERROR: ${label}\n     has code="${c}" but paper_mapping_${isCsat?'CSAT':'GS'}.json is empty.\n     Answers stored AS-IS — scores WILL BE WRONG once mapping is filled!\n     Fill the mapping file before going live.\n`)
+    return answers
+  }
+  const remapped = {}
+  let mapped = 0, skipped = 0
+  for (const q of Object.keys(answers)) {
+    const setAQ = codeMap[String(q)]
+    if (setAQ !== undefined) {
+      remapped[String(setAQ)] = answers[q]
+      mapped++
+    } else {
+      console.warn(`  WARNING: no Set-A mapping for Q${q} in code ${c} (${label}) — dropped`)
+      skipped++
+    }
+  }
+  console.log(`  Remapped Set ${c} → Set A: ${mapped} Qs${skipped ? `, ${skipped} dropped (no mapping)` : ''}`)
+  return remapped
+}
+
+// Load mapping FIRST — needed before institute keys can be remapped
+const mappingPath = isCsat
+  ? path.join(__dirname, 'keys', 'paper_mapping_CSAT.json')
+  : path.join(__dirname, 'keys', 'paper_mapping_GS.json')
+const mapping = readJsonOptional(mappingPath, { B: {}, C: {}, D: {} })
+
 // Auto-discover institutes
 const institutesDir = path.join(__dirname, 'institutes')
 const folders = fs.readdirSync(institutesDir)
@@ -43,8 +79,10 @@ for (const name of folders) {
   }
   try {
     const key = JSON.parse(fs.readFileSync(keyFile, 'utf8'))
-    institutesKeys.push({ name, isOfficial: false, answers: key.answers })
-    console.log(`  Included: ${name}`)
+    const answers = remapToSetA(key.answers, key.code, mapping, keyFile)
+    institutesKeys.push({ name, isOfficial: false, answers })
+    const codeTag = key.code && key.code.toUpperCase() !== 'A' ? ` [code ${key.code.toUpperCase()} → remapped to A]` : ''
+    console.log(`  Included: ${name}${codeTag}`)
   } catch (e) {
     console.warn(`Warning: could not parse ${keyFile}: ${e.message}`)
   }
@@ -58,16 +96,16 @@ if (institutesKeys.length === 0) {
 const officialKeyPath = isCsat
   ? path.join(__dirname, 'keys', 'official_key_CSAT.json')
   : path.join(__dirname, 'keys', 'official_key_GS.json')
-const mappingPath = isCsat
-  ? path.join(__dirname, 'keys', 'paper_mapping_CSAT.json')
-  : path.join(__dirname, 'keys', 'paper_mapping_GS.json')
 const questionsPath = isCsat
   ? path.join(__dirname, 'keys', 'csat', 'questions_CSAT.json')
   : path.join(__dirname, 'keys', 'questions.json')
 
-const officialKey  = readJsonOptional(officialKeyPath, { name: 'Official UPSC Key', isOfficial: true, answers: {} })
-const mapping      = readJsonOptional(mappingPath, { B: {}, C: {}, D: {} })
-const questions    = readJsonOptional(questionsPath, { questions: [] })
+const officialKeyRaw = readJsonOptional(officialKeyPath, { name: 'Official UPSC Key', isOfficial: true, answers: {} })
+const officialKey = {
+  ...officialKeyRaw,
+  answers: remapToSetA(officialKeyRaw.answers, officialKeyRaw.code, mapping, officialKeyPath)
+}
+const questions = readJsonOptional(questionsPath, { questions: [] })
 
 const paperConfig = isCsat
   ? { paper: 'CSAT', totalQ: 80,  perPage: 10, totalPages: 8,  correctMark: 2.50, wrongMark: 0.8333 }
@@ -173,6 +211,12 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
 .res-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 22px;border-radius:14px;border:2px solid #E6E0D5;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;text-decoration:none;color:#1C1510;font-family:'Playfair Display',serif;font-size:17px;font-weight:400;width:100%}
 .res-btn:hover{border-color:${P};box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .res-btn svg{flex-shrink:0;color:#6B7280;width:18px;height:18px}
+.box-2026{border:2px solid ${P};border-radius:16px;background:#fff7ed;padding:16px;margin-bottom:14px}
+.box-2026-badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${P};margin-bottom:12px}
+.box-2026-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:${P}}
+.box-2026 .res-btn{background:#fff;border-color:#FDDCB5;margin-bottom:10px}
+.box-2026 .res-btn:last-child{margin-bottom:0}
+.box-2026 .res-btn:hover{border-color:${P};background:#fff7ed}
 </style>
 </head>
 <body>
@@ -201,11 +245,19 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
 
   <div class="divider"><span class="divider-line"></span><span class="divider-label">Resources</span><span class="divider-line"></span></div>
 
+  <div class="box-2026">
+    <div class="box-2026-badge">UPSC CSE Prelims 2026</div>
+    <a href="/prelims_2026_gs_paper.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+      UPSC 2026 Question Paper
+    </a>
+    <a href="/prelims_2026_subject_analysis.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg>
+      UPSC 2026 Subject-wise Analysis
+    </a>
+  </div>
+
   <div class="res-group">
-  <a href="/prelims_2026_gs_paper.html" class="res-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
-    UPSC 2026 Question Paper Analysis
-  </a>
   <a href="/total-qns-attempt-planner.html" class="res-btn">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
     No. of Questions Attempt Strategy
@@ -231,12 +283,18 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
   fs.writeFileSync(path.join(distDir, 'index.html'), landing)
   console.log('Built: dist/index.html (paper selector)')
 
-  // Copy public/ static files to dist/
-  const publicDir = path.join(__dirname, 'public')
-  if (fs.existsSync(publicDir)) {
-    fs.readdirSync(publicDir).forEach(f => {
-      fs.copyFileSync(path.join(publicDir, f), path.join(distDir, f))
-    })
-    console.log('Copied public/ static files to dist/')
-  }
+  // Inject support banner into any static HTML files already present in dist/
+  // (excludes the three files this build just generated)
+  const generated = new Set(['index.html', 'all-institutes-gs1-score-checker.html', 'all-institutes-csat-score-checker.html'])
+  const supportBanner = `<div style="position:sticky;top:0;z-index:9999;background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0c4a6e;line-height:1.4;"><span style="font-size:16px;flex-shrink:0;">&#9993;</span><span>Facing any issues? Mail us at <a href="mailto:${appConfig.contactEmail}" style="color:#0284c7;font-weight:700;text-decoration:none;">${appConfig.contactEmail}</a> &mdash; you'll receive a quick reply.</span></div>`
+  const BANNER_MARKER = 'data-support-banner'
+  fs.readdirSync(distDir).forEach(f => {
+    if (!f.endsWith('.html') || generated.has(f)) return
+    const dest = path.join(distDir, f)
+    let content = fs.readFileSync(dest, 'utf8')
+    if (content.includes(BANNER_MARKER)) return  // already injected
+    content = content.replace(/(<body[^>]*>)/i, `$1<div ${BANNER_MARKER} style="position:sticky;top:0;z-index:9999;background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0c4a6e;line-height:1.4;"><span style="font-size:16px;flex-shrink:0;">&#9993;</span><span>Facing any issues? Mail us at <a href="mailto:${appConfig.contactEmail}" style="color:#0284c7;font-weight:700;text-decoration:none;">${appConfig.contactEmail}</a> &mdash; you\'ll receive a quick reply.</span></div>`)
+    fs.writeFileSync(dest, content)
+    console.log(`  Injected support banner: ${f}`)
+  })
 }

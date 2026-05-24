@@ -1,6 +1,7 @@
-dist/
+# Generated files — never commit these
+dist/all-institutes-gs1-score-checker.html
+dist/all-institutes-csat-score-checker.html
+dist/index.html
 node_modules/
 supabase.config.json
-.vercel
-
 .vercel
