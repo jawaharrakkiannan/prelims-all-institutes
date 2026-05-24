@@ -15,6 +15,7 @@
     { "src": "/csat", "dest": "/all-institutes-csat-score-checker.html" },
     { "src": "/prelims_2026_gs_paper.html", "dest": "/prelims_2026_gs_paper.html" },
     { "src": "/prelims_2026_institute_key_comparison.html", "dest": "/prelims_2026_institute_key_comparison.html" },
+    { "src": "/prelims_2026_CSAT_paper.html", "dest": "/prelims_2026_CSAT_paper.html" },
     { "src": "/prelims_2026_subject_analysis.html", "dest": "/prelims_2026_subject_analysis.html" },
     { "src": "/total-qns-attempt-planner.html", "dest": "/total-qns-attempt-planner.html" },
     { "src": "/upsc_prelims_cutoff.html", "dest": "/upsc_prelims_cutoff.html" },
