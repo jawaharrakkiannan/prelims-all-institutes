@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No. of Qns Attempt Planner — UPSC Prelims 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff7ed;
+  --bg2:#ffedd5;
+  --surface:#ffffff;
+  --border:#e2e8f0;
+  --border2:#cbd5e1;
+  --text:#3b1a08;
+  --text2:#374151;
+  --text3:#6b7280;
+  --accent:#ea580c;
+  --accent2:rgba(234,88,12,.11);
+  --accent3:rgba(234,88,12,.05);
+  --green:#276248;
+  --red:#b03030;
+  --teal:#0f766e;
+  --mono:'IBM Plex Mono',monospace;
+  --body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);background-image:repeating-linear-gradient(transparent 0,transparent 1.65rem,rgba(180,120,60,.06) 1.65rem,rgba(180,120,60,.06) calc(1.65rem + 1px));color:var(--text);min-height:100vh}
+.w{max-width:600px;margin:0 auto;padding:0 16px}
+.card{background:var(--surface);border-radius:2px;padding:20px;margin-bottom:12px;border:1px solid var(--border);border-top:3px solid var(--accent)}
+.tag{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:.18em;margin-bottom:14px;display:block}
+.inp{width:100%;padding:14px;border:1.5px solid var(--border2);border-radius:2px;font-size:36px;font-weight:900;font-family:var(--mono);text-align:center;outline:none;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;appearance:textfield;-moz-appearance:textfield;font-variant-numeric:tabular-nums}
+.inp::-webkit-outer-spin-button,.inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.hint{font-size:11px;color:var(--text3);margin-top:6px;text-align:center;font-family:var(--mono)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border2)}
+thead tr{background:var(--bg2);position:sticky;top:var(--sticky-top,0px);z-index:10;}
+th{color:var(--accent);padding:8px 4px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.2px;text-transform:uppercase;font-weight:700;border-bottom:2px solid var(--accent);border-right:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none;transition:background .12s}
+th:last-child{border-right:none}
+th:hover{background:#fde8d4}
+th.sort-active{background:var(--accent2);color:var(--accent)}
+td{padding:10px 7px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-size:13px;font-weight:400;vertical-align:middle}
+td:last-child{border-right:none}
+tr:last-child td{border-bottom:none}
+tr.alt{background:var(--accent3)}
+.tab-btn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:7px 20px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text3);cursor:pointer;transition:all .15s;}
+.tab-btn:first-child{border-radius:2px 0 0 2px;border-right:none;}
+.tab-btn:last-child{border-radius:0 2px 2px 0;}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- Masthead -->
+<div style="background:#fff7ed;padding:2rem 0 0;">
+  <div class="w" style="text-align:center;">
+    <hr style="border:none;border-top:3px solid #111827;border-bottom:1px solid #111827;height:5px;margin:0 0 1.25rem;background:transparent;">
+    <h1 style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:clamp(1.8rem,5vw,2.8rem);font-weight:700;color:#111827;line-height:1.1;letter-spacing:.005em;margin-bottom:.7rem;">No. of Qns <em style="font-style:italic;font-weight:400;color:#ea580c;">Attempt</em> Planner</h1>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:#374151;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.25rem;">Question Attempt Strategy</div>
+    <hr style="border:none;border-top:3px solid #111827;border-bottom:1px solid #111827;height:5px;margin:0;background:transparent;">
+  </div>
+</div>
+
+<!-- Paper Tabs -->
+<div style="background:#fff7ed;padding:16px 0 0;">
+  <div class="w" style="display:flex;justify-content:center;">
+    <button id="tab-gs" class="tab-btn active" onclick="switchPaper('gs')">GS Paper 1</button>
+    <button id="tab-csat" class="tab-btn" onclick="switchPaper('csat')">CSAT Paper 2</button>
+  </div>
+</div>
+
+<!-- Scoring bar -->
+<div style="background:#fff7ed;padding:9px 0;border-bottom:1px solid #e2e8f0;margin-top:12px;">
+  <div class="w" style="display:flex;justify-content:center;gap:0;">
+    <span id="bar-correct" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:#276248;padding:0 16px;border-right:1px solid #cbd5e1;">+2.00 Correct</span>
+    <span id="bar-wrong" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:#b03030;padding:0 16px;border-right:1px solid #cbd5e1;">−0.66 Wrong</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:#6b7280;padding:0 16px;">0.00 Skip</span>
+  </div>
+</div>
+
+<!-- Sticky input (GS only) -->
+<div id="sticky-input" style="position:sticky;top:0;z-index:100;background:#fff7ed;padding:10px 0 6px;border-bottom:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+  <div class="w">
+    <div class="card" style="margin-bottom:0;">
+      <span class="tag" style="margin-bottom:8px;">Target Cut-off Score</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="btn-dec" style="flex-shrink:0;width:48px;height:68px;border:1.5px solid #cbd5e1;border-radius:2px;background:#ffedd5;font-size:26px;font-weight:700;color:#374151;cursor:pointer;line-height:1;transition:background .12s,border-color .12s;" onmouseover="this.style.background='#fed7aa';this.style.borderColor='#ea580c'" onmouseout="this.style.background='#ffedd5';this.style.borderColor='#cbd5e1'">&#8722;</button>
+        <input id="inp-s" class="inp" type="number" min="1" max="200" step="0.5" value="95" autocomplete="off" style="flex:1;">
+        <button id="btn-inc" style="flex-shrink:0;width:48px;height:68px;border:1.5px solid #cbd5e1;border-radius:2px;background:#ffedd5;font-size:26px;font-weight:700;color:#374151;cursor:pointer;line-height:1;transition:background .12s,border-color .12s;" onmouseover="this.style.background='#fed7aa';this.style.borderColor='#ea580c'" onmouseout="this.style.background='#ffedd5';this.style.borderColor='#cbd5e1'">+</button>
+      </div>
+      <p class="hint">out of 200 marks &nbsp;·&nbsp; table updates automatically</p>
+    </div>
+  </div>
+</div>
+
+<!-- CSAT fixed score banner (hidden by default) -->
+<div id="csat-banner" style="display:none;background:#fff7ed;padding:10px 0 6px;border-bottom:1px solid #e2e8f0;">
+  <div class="w">
+    <div class="card" style="margin-bottom:0;text-align:center;">
+      <span class="tag" style="margin-bottom:6px;">Qualifying Score</span>
+      <div style="font-size:36px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:#ea580c;font-variant-numeric:tabular-nums;line-height:1;">66</div>
+      <p class="hint">33% of 200 &nbsp;·&nbsp; fixed CSAT qualifying cutoff</p>
+    </div>
+  </div>
+</div>
+
+<div class="w" style="padding-top:16px;padding-bottom:40px;">
+  <div id="result"></div>
+</div>
+
+<script>
+var paperMode = 'gs';
+
+var PAPERS = {
+  gs:   { MC: 2,   MW: 0.66,  TOTAL: 100, S: 95,  label: 'GS Paper 1'  },
+  csat: { MC: 2.5, MW: 0.833, TOTAL: 80,  S: 66,  label: 'CSAT Paper 2' }
+};
+
+var sortState = { col: null, dir: 1 };
+var currentRows = [];
+
+var COL_DEFS = [
+  { key: 'n',     label: 'Attempt'  },
+  { key: 'c',     label: 'Correct'  },
+  { key: 'w',     label: 'Wrong'    },
+  { key: 'u',     label: 'Skip'     },
+  { key: 'score', label: 'Score'    },
+  { key: 'acc',   label: 'Acc %'    }
+];
+
+var COL_WIDTHS = [70, 65, 60, 55, 65, 58];
+
+function updateStickyTop() {
+  var el = document.getElementById('sticky-input');
+  var h = (el && el.style.display !== 'none') ? el.offsetHeight : 0;
+  document.documentElement.style.setProperty('--sticky-top', h + 'px');
+  var sh = document.querySelector('.tbl-sticky-head');
+  if (sh) sh.style.top = h + 'px';
+}
+
+function switchPaper(mode) {
+  paperMode = mode;
+
+  document.getElementById('tab-gs').className   = 'tab-btn' + (mode === 'gs'   ? ' active' : '');
+  document.getElementById('tab-csat').className = 'tab-btn' + (mode === 'csat' ? ' active' : '');
+
+  var p = PAPERS[mode];
+  document.getElementById('bar-correct').textContent = '+' + p.MC.toFixed(2) + ' Correct';
+  document.getElementById('bar-wrong').textContent   = '−' + p.MW.toFixed(2) + ' Wrong';
+
+  var showInput = mode === 'gs';
+  document.getElementById('sticky-input').style.display = showInput ? '' : 'none';
+  document.getElementById('csat-banner').style.display  = showInput ? 'none' : '';
+
+  updateStickyTop();
+  recalc();
+}
+
+function getS() {
+  if (paperMode === 'csat') return PAPERS.csat.S;
+  var sv = document.getElementById('inp-s').value.trim();
+  return parseFloat(sv) || 0;
+}
+
+function recalc() {
+  var el = document.getElementById('result');
+  var p  = PAPERS[paperMode];
+  var S  = getS();
+
+  if (!S || S <= 0 || S > 200) {
+    renderErr(el, 'Score must be between 1 and 200.');
+    return;
+  }
+
+  var rows = [];
+  for (var u = 0; u <= p.TOTAL; u++) {
+    var n = p.TOTAL - u;
+    if (p.MC * n < S) break;
+    var maxWrong   = Math.floor((p.MC * n - S) / (p.MC + p.MW));
+    var minCorrect = n - maxWrong;
+    var score      = p.MC * minCorrect - p.MW * maxWrong;
+    var acc        = Math.round((minCorrect / n) * 10000) / 100;
+    rows.push({ u: u, n: n, c: minCorrect, w: maxWrong, acc: acc, score: score });
+  }
+
+  if (rows.length === 0) {
+    renderErr(el, 'Target score ' + S + ' is impossible with current paper settings.');
+    return;
+  }
+
+  currentRows = rows;
+  sortState = paperMode === 'csat' ? { col: 'w', dir: 1 } : { col: null, dir: 1 };
+
+  clearEl(el);
+  el.appendChild(buildSummary(rows, S));
+  el.appendChild(buildTable(rows));
+}
+
+function clearEl(el) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+}
+
+function renderErr(el, msg) {
+  clearEl(el);
+  var d = document.createElement('div');
+  d.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:2px;padding:14px 16px;margin-bottom:12px;';
+  var p = document.createElement('p');
+  p.style.cssText = 'font-size:13px;font-weight:500;color:#991B1B;font-family:var(--mono)';
+  p.textContent = '⚠ ' + msg;
+  d.appendChild(p);
+  el.appendChild(d);
+}
+
+function buildSummary(rows, S) {
+  var refU = paperMode === 'csat' ? 35 : 10;
+  var rRef = null;
+  for (var i = 0; i < rows.length; i++) { if (rows[i].u === refU) { rRef = rows[i]; break; } }
+  if (!rRef) rRef = rows[0];
+
+  var card = document.createElement('div');
+  card.className = 'card';
+
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = 'Strategy at a Glance';
+  card.appendChild(tag);
+
+  var topBox = document.createElement('div');
+  topBox.style.cssText = 'text-align:center;border-radius:2px;padding:14px 8px;background:#fff7ed;margin-bottom:10px;border:1px solid #e2e8f0;';
+  var topNum = document.createElement('div');
+  topNum.style.cssText = 'font-size:32px;font-weight:900;color:#ea580c;line-height:1;font-variant-numeric:tabular-nums;font-family:var(--mono)';
+  topNum.textContent = S;
+  var topLbl = document.createElement('div');
+  topLbl.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;color:#c2410c;text-transform:uppercase;letter-spacing:.1em;margin-top:5px;";
+  topLbl.textContent = 'Target Score';
+  topBox.appendChild(topNum); topBox.appendChild(topLbl);
+  card.appendChild(topBox);
+
+  var subLabel = document.createElement('div');
+  subLabel.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;text-align:center;";
+  subLabel.textContent = 'At ' + refU + ' Unattempted';
+  card.appendChild(subLabel);
+
+  var grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:6px;';
+
+  var statsRow1 = [
+    { lbl: 'Correct',     val: rRef.c,                    bg: '#f0fdf4', numColor: '#276248', lblColor: '#16a34a' },
+    { lbl: 'Wrong',       val: rRef.w,                    bg: '#fef2f2', numColor: '#b03030', lblColor: '#ef4444' },
+    { lbl: 'Unattempted', val: rRef.u,                    bg: '#fff7ed', numColor: '#92400e', lblColor: '#b45309' },
+    { lbl: 'Score',       val: rRef.score.toFixed(2),     bg: '#ffedd5', numColor: '#ea580c', lblColor: '#c2410c' },
+    { lbl: 'Accuracy',    val: rRef.acc.toFixed(1) + '%', bg: '#f0fdfa', numColor: '#0f766e', lblColor: '#14b8a6' }
+  ];
+  var statsRow2 = [];
+
+  function makeBox(s, container) {
+    var box = document.createElement('div');
+    box.style.cssText = 'text-align:center;border-radius:2px;padding:10px 4px;background:' + s.bg + ';border:1px solid #e2e8f0;';
+    var num = document.createElement('div');
+    num.style.cssText = 'font-size:16px;font-weight:700;color:' + s.numColor + ';line-height:1;font-variant-numeric:tabular-nums;font-family:var(--mono)';
+    num.textContent = s.val;
+    var lbl = document.createElement('div');
+    lbl.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;color:" + s.lblColor + ";text-transform:uppercase;letter-spacing:.06em;margin-top:4px;";
+    lbl.textContent = s.lbl;
+    box.appendChild(num); box.appendChild(lbl);
+    container.appendChild(box);
+  }
+
+  statsRow1.forEach(function(s) { makeBox(s, grid); });
+
+  card.appendChild(grid);
+  return card;
+}
+
+function makeColgroup() {
+  var cg = document.createElement('colgroup');
+  COL_WIDTHS.forEach(function(w) {
+    var col = document.createElement('col');
+    col.style.width = w + 'px';
+    cg.appendChild(col);
+  });
+  return cg;
+}
+
+function buildTable(rows) {
+  var card = document.createElement('div');
+  card.className = 'card';
+
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = 'Attempt Breakdown \xb7 Click any column header to sort';
+  card.appendChild(tag);
+
+  var minW = COL_WIDTHS.reduce(function(s,w){return s+w;},0);
+  var tblStyle = 'width:100%;min-width:'+minW+'px;table-layout:fixed;border-collapse:collapse;';
+
+  var outer = document.createElement('div');
+  outer.style.cssText = 'border:1px solid #cbd5e1;border-radius:2px;';
+
+  /* ── Sticky header ── */
+  var stickyHead = document.createElement('div');
+  stickyHead.className = 'tbl-sticky-head';
+  stickyHead.style.cssText = 'position:sticky;top:0;z-index:10;overflow:hidden;background:var(--bg2);';
+  /* update top after render */
+
+  var headTbl = document.createElement('table');
+  headTbl.style.cssText = tblStyle + 'background:var(--bg2);';
+  headTbl.appendChild(makeColgroup());
+
+  var thead = document.createElement('thead');
+  var hrow  = document.createElement('tr');
+  var thEls = {};
+
+  COL_DEFS.forEach(function(col) {
+    var th = document.createElement('th');
+    thEls[col.key] = th;
+    setThLabel(th, col.label, col.key);
+    th.addEventListener('click', function() {
+      if (sortState.col === col.key) { sortState.dir = -sortState.dir; }
+      else { sortState.col = col.key; sortState.dir = 1; }
+      COL_DEFS.forEach(function(c) { setThLabel(thEls[c.key], c.label, c.key); });
+      renderTbody(tbodyEl, getSorted(currentRows));
+    });
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  headTbl.appendChild(thead);
+  stickyHead.appendChild(headTbl);
+  outer.appendChild(stickyHead);
+
+  /* ── Scrollable body ── */
+  var scrollDiv = document.createElement('div');
+  scrollDiv.style.cssText = 'overflow-x:auto;';
+
+  var bodyTbl = document.createElement('table');
+  bodyTbl.style.cssText = tblStyle + 'background:var(--surface);';
+  bodyTbl.appendChild(makeColgroup());
+
+  var tbodyEl = document.createElement('tbody');
+  renderTbody(tbodyEl, getSorted(rows));
+  bodyTbl.appendChild(tbodyEl);
+  scrollDiv.appendChild(bodyTbl);
+  outer.appendChild(scrollDiv);
+
+  /* sync horizontal scroll */
+  scrollDiv.addEventListener('scroll', function() {
+    headTbl.style.transform = 'translateX(-'+scrollDiv.scrollLeft+'px)';
+  });
+
+  card.appendChild(outer);
+
+  /* set sticky offset after card is in DOM via setTimeout */
+  setTimeout(function() {
+    var si = document.getElementById('sticky-input');
+    var h = (si && si.style.display !== 'none') ? si.offsetHeight : 0;
+    stickyHead.style.top = h + 'px';
+  }, 0);
+
+  var note = document.createElement('p');
+  note.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6b7280;margin-top:12px;text-align:center;letter-spacing:.03em;";
+  note.textContent = 'Each row: minimum correct + maximum wrong to hit target. Unattempted 0 → '+currentRows[currentRows.length-1].u+'.';
+  card.appendChild(note);
+
+  return card;
+}
+
+function setThLabel(th, label, key) {
+  while (th.firstChild) th.removeChild(th.firstChild);
+  var isActive = sortState.col === key;
+  th.className = isActive ? 'sort-active' : '';
+  th.textContent = label + (isActive ? (sortState.dir === 1 ? ' ↑' : ' ↓') : ' ↕');
+}
+
+function getSorted(rows) {
+  if (!sortState.col) return rows.slice();
+  var key = sortState.col, dir = sortState.dir;
+  return rows.slice().sort(function(a, b) { return (a[key] - b[key]) * dir; });
+}
+
+function renderTbody(tbodyEl, rows) {
+  while (tbodyEl.firstChild) tbodyEl.removeChild(tbodyEl.firstChild);
+  rows.forEach(function(r, idx) {
+    var tr = document.createElement('tr');
+    if (idx % 2 === 1) tr.className = 'alt';
+
+    var td0 = document.createElement('td');
+    td0.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6b7280;";
+    td0.textContent = r.n;
+    tr.appendChild(td0);
+
+    var td1 = document.createElement('td');
+    td1.style.cssText = 'font-size:14px;color:#276248;';
+    td1.textContent = r.c;
+    tr.appendChild(td1);
+
+    var td2 = document.createElement('td');
+    td2.style.cssText = 'font-size:14px;color:#b03030;';
+    td2.textContent = r.w;
+    tr.appendChild(td2);
+
+    var td3 = document.createElement('td');
+    td3.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:13px;color:#92400e;";
+    td3.textContent = r.u;
+    tr.appendChild(td3);
+
+    var td4 = document.createElement('td');
+    td4.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:13px;color:#ea580c;font-variant-numeric:tabular-nums;";
+    td4.textContent = r.score.toFixed(2);
+    tr.appendChild(td4);
+
+    var td5 = document.createElement('td');
+    td5.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0f766e;";
+    td5.textContent = r.acc.toFixed(2) + '%';
+    tr.appendChild(td5);
+
+    tbodyEl.appendChild(tr);
+  });
+}
+
+var inp = document.getElementById('inp-s');
+inp.addEventListener('input', recalc);
+
+document.getElementById('btn-dec').addEventListener('click', function() {
+  var v = parseFloat(inp.value) || 0;
+  if (v > 1) { inp.value = Math.round((v - 1) * 100) / 100; recalc(); }
+});
+
+document.getElementById('btn-inc').addEventListener('click', function() {
+  var v = parseFloat(inp.value) || 0;
+  if (v < 200) { inp.value = Math.round((v + 1) * 100) / 100; recalc(); }
+});
+
+updateStickyTop();
+recalc();
+window.addEventListener('resize', updateStickyTop);
+</script>
+</body>
+</html>

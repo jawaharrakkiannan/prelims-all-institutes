@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>UPSC Prelims Cut-Off — Year-wise</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#111827;padding:2rem 1rem;line-height:1.6}
+header{text-align:center;margin-bottom:2rem}
+header h1{font-size:1.35rem;font-weight:800;color:#111827;letter-spacing:-.01em}
+header p{font-size:.85rem;color:#6b7280;margin-top:.35rem}
+.card{max-width:960px;margin:0 auto 2rem;background:#fff;border:1px solid #e5e7eb;border-top:3px solid #ea580c;border-radius:12px;padding:1.5rem 1.75rem;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.card-title{font-size:.95rem;font-weight:700;color:#9a3412;padding:.4rem .85rem;background:#fff7ed;border-left:4px solid #ea580c;border-radius:0 8px 8px 0;margin-bottom:.6rem}
+.card-note{font-size:.78rem;color:#6b7280;margin-bottom:.5rem;font-style:italic}
+.hint{font-size:.75rem;color:#9ca3af;margin-bottom:.85rem}
+.hint strong{color:#6b7280}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.875rem}
+thead th{background:#ea580c;color:#fff;padding:.55rem 1rem;text-align:center;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+thead th:first-child{text-align:left}
+tbody td{padding:.48rem 1rem;border-bottom:1px solid #f3f4f6;text-align:center;white-space:nowrap}
+tbody td:first-child{text-align:left;font-weight:700;color:#9a3412}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fff7ed}
+.low{color:#dc2626}
+.high{color:#16a34a}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{background:#c2410c}
+.sort-icon{font-size:.65rem;margin-left:.2rem;opacity:.45;vertical-align:middle}
+thead th.sorted .sort-icon{opacity:1;color:#fbbf24}
+thead th.sorted{background:#b45309}
+@media(max-width:640px){table{font-size:.78rem}thead th,tbody td{padding:.4rem .55rem}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>UPSC CSE Prelims Cut-Off — Year-wise</h1>
+  <p>General Studies Paper I &mdash; Marks out of 200 (negative marking applies)</p>
+</header>
+
+<div class="card" id="card-prelims"></div>
+
+<script>
+var DATA = {
+  cardId: 'card-prelims',
+  title:  'Prelims Cut-Off: 2020 – 2025',
+  note:   'GS Paper I only. CSAT (Paper II) qualifying (33% min), not counted for merit.',
+  categories: ['General','EWS','OBC','SC','ST','PwBD-1','PwBD-2','PwBD-3','PwBD-5'],
+  years: [
+    {year:'2025', vals:[92.66,89.34,92.00,84.00,82.66,76.66,54.66,40.66,40.66]},
+    {year:'2024', vals:[87.98,85.92,87.28,79.03,74.23,69.42,65.30,40.56,40.56]},
+    {year:'2023', vals:[75.41,68.02,74.75,59.25,47.82,40.40,47.13,40.40,33.68]},
+    {year:'2022', vals:[88.22,82.83,87.54,74.08,69.35,49.84,58.59,40.40,41.76]},
+    {year:'2021', vals:[87.54,80.14,89.12,75.41,70.71,68.02,67.33,43.09,45.80]},
+    {year:'2020', vals:[92.51,77.55,89.12,74.84,68.71,70.06,63.94,40.82,42.86]}
+  ]
+};
+
+function reHighlight(tbody) {
+  /* highlight high/low per column (category) */
+  var nCols = DATA.categories.length;
+  for (var ci = 0; ci < nCols; ci++) {
+    var rows = Array.from(tbody.rows);
+    var colVals = rows.map(function(r) { return parseFloat(r.cells[ci+1].textContent) || 0; });
+    var max = Math.max.apply(null, colVals);
+    var min = Math.min.apply(null, colVals);
+    rows.forEach(function(r, ri) {
+      var cell = r.cells[ci+1];
+      cell.classList.remove('high','low');
+      if (max === min) return;
+      if (colVals[ri] === max) cell.classList.add('high');
+      else if (colVals[ri] === min) cell.classList.add('low');
+    });
+  }
+}
+
+(function() {
+  var card  = document.getElementById(DATA.cardId);
+  var state = {el: null, dir: 1};
+
+  /* title */
+  var titleEl = document.createElement('div');
+  titleEl.className = 'card-title';
+  titleEl.textContent = DATA.title;
+  card.appendChild(titleEl);
+
+  /* note */
+  var noteEl = document.createElement('p');
+  noteEl.className = 'card-note';
+  noteEl.textContent = DATA.note;
+  card.appendChild(noteEl);
+
+  /* hint */
+  var hintEl = document.createElement('p');
+  hintEl.className = 'hint';
+  var s = document.createElement('strong');
+  s.textContent = 'category header';
+  hintEl.appendChild(document.createTextNode('Click '));
+  hintEl.appendChild(s);
+  hintEl.appendChild(document.createTextNode(' to sort years ↑↓'));
+  card.appendChild(hintEl);
+
+  /* table */
+  var table = document.createElement('table');
+
+  /* thead: Year | Cat1 | Cat2 | ... */
+  var thead = document.createElement('thead');
+  var hRow  = document.createElement('tr');
+  var th0   = document.createElement('th');
+  th0.textContent = 'Year';
+  th0.classList.add('sortable');
+  th0.title = 'Sort years chronologically';
+  var icon0 = document.createElement('span');
+  icon0.className = 'sort-icon';
+  icon0.textContent = '⇅';
+  th0.appendChild(icon0);
+  th0.addEventListener('click', function() {
+    var dir = (state.el === th0) ? -state.dir : 1;
+    state.el = th0; state.dir = dir;
+
+    var rows = Array.from(tbody.rows);
+    rows.sort(function(a, b) {
+      return dir * (parseInt(a.cells[0].textContent) - parseInt(b.cells[0].textContent));
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+
+    Array.from(hRow.cells).forEach(function(h) {
+      h.classList.remove('sorted');
+      var ic = h.querySelector('.sort-icon');
+      if (ic) ic.textContent = '⇅';
+    });
+    th0.classList.add('sorted');
+    var ic = th0.querySelector('.sort-icon');
+    if (ic) ic.textContent = dir === 1 ? ' ↑' : ' ↓';
+
+    reHighlight(tbody);
+  });
+  hRow.appendChild(th0);
+
+  DATA.categories.forEach(function(cat, ci) {
+    var th = document.createElement('th');
+    th.textContent = cat;
+    th.classList.add('sortable');
+    th.title = 'Sort years by ' + cat;
+    var icon = document.createElement('span');
+    icon.className = 'sort-icon';
+    icon.textContent = '⇅'; /* ⇅ */
+    th.appendChild(icon);
+    hRow.appendChild(th);
+  });
+  thead.appendChild(hRow);
+  table.appendChild(thead);
+
+  /* tbody: one row per year */
+  var tbody = document.createElement('tbody');
+  DATA.years.forEach(function(yr) {
+    var tr  = document.createElement('tr');
+    var td0 = document.createElement('td');
+    td0.textContent = yr.year;
+    tr.appendChild(td0);
+    yr.vals.forEach(function(v) {
+      var td = document.createElement('td');
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  reHighlight(tbody);
+
+  /* category header click → sort year rows */
+  Array.from(hRow.cells).forEach(function(th, ci) {
+    if (ci === 0) return; /* skip Year label col */
+    th.addEventListener('click', function() {
+      var dir = (state.el === th) ? -state.dir : 1;
+      state.el = th; state.dir = dir;
+
+      var rows = Array.from(tbody.rows);
+      rows.sort(function(a, b) {
+        return dir * ((parseFloat(a.cells[ci].textContent) || 0) -
+                      (parseFloat(b.cells[ci].textContent) || 0));
+      });
+      rows.forEach(function(r) { tbody.appendChild(r); });
+
+      /* update sort indicators */
+      Array.from(hRow.cells).forEach(function(h) {
+        h.classList.remove('sorted');
+        var ic = h.querySelector('.sort-icon');
+        if (ic) ic.textContent = '⇅';
+      });
+      th.classList.add('sorted');
+      var ic = th.querySelector('.sort-icon');
+      if (ic) ic.textContent = dir === 1 ? ' ↑' : ' ↓';
+
+      reHighlight(tbody);
+    });
+  });
+
+  var wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+  wrap.appendChild(table);
+  card.appendChild(wrap);
+})();
+</script>
+</body>
+</html>

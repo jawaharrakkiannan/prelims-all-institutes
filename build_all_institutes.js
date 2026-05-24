@@ -166,6 +166,14 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
 .paper-btn--primary .paper-btn__arrow{color:#fff}
 .paper-btn--primary:hover{border-color:${P};box-shadow:0 4px 20px rgba(249,115,22,.35)}
 .footer{margin-top:32px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C4BDB3;letter-spacing:.5px}
+.divider{display:flex;align-items:center;gap:10px;margin:24px 0 16px}
+.divider-line{flex:1;height:1px;background:#E6E0D5}
+.divider-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C4BDB3;white-space:nowrap}
+.res-group{display:flex;flex-direction:column;align-items:center;width:100%}
+.res-inner{display:flex;flex-direction:column;width:fit-content}
+.res-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 20px;border-radius:10px;border:1.5px solid #E6E0D5;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;margin-bottom:8px;text-decoration:none;color:#1C1510;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;white-space:nowrap}
+.res-btn:hover{border-color:${P};box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.res-btn svg{flex-shrink:0;color:#6B7280;width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -192,10 +200,44 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
     <span class="paper-btn__arrow" style="color:#9CA3AF">&#8594;</span>
   </a>
 
+  <div class="divider"><span class="divider-line"></span><span class="divider-label">Resources</span><span class="divider-line"></span></div>
+
+  <div class="res-group"><div class="res-inner">
+  <a href="/prelims_2026_gs_paper.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+    UPSC 2026 Question Paper Analysis
+  </a>
+  <a href="/total-qns-attempt-planner.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+    No. of Questions Attempt Strategy
+  </a>
+  <a href="/upsc_prelims_cutoff.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+    Previous Years Cut-off Details
+  </a>
+  <a href="/gs_prelims_pyqs_question_bank.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+    UPSC CSE Prelims GS Question Bank
+  </a>
+  <a href="/gs_mains_pyqs_question_bank.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+    UPSC CSE Mains GS Question Bank
+  </a>
+  </div></div>
+
   <p class="footer">${appConfig.contactEmail}</p>
 </div>
 </body>
 </html>`
   fs.writeFileSync(path.join(distDir, 'index.html'), landing)
   console.log('Built: dist/index.html (paper selector)')
+
+  // Copy public/ static files to dist/
+  const publicDir = path.join(__dirname, 'public')
+  if (fs.existsSync(publicDir)) {
+    fs.readdirSync(publicDir).forEach(f => {
+      fs.copyFileSync(path.join(publicDir, f), path.join(distDir, f))
+    })
+    console.log('Copied public/ static files to dist/')
+  }
 }
