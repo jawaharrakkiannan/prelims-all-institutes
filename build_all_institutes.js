@@ -177,6 +177,7 @@ console.log(`\nBuilt: dist/all-institutes-${paper}-score-checker.html (${institu
 if (!isCsat) {
   const P = appConfig.primaryColor || '#f97316'
   const landing = `<!DOCTYPE html>
+<!-- Support: upsc.ai.stack@gmail.com — mail for a quick reply -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -287,21 +288,6 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
   fs.writeFileSync(path.join(distDir, 'index.html'), landing)
   console.log('Built: dist/index.html (paper selector)')
 
-  // Inject support banner into any static HTML files already present in dist/
-  // (excludes the three files this build just generated)
   // Build key comparison page
   require('./build_key_comparison.js')
-
-  const generated = new Set(['index.html', 'all-institutes-gs1-score-checker.html', 'all-institutes-csat-score-checker.html', 'prelims_2026_institute_key_comparison.html'])
-  const supportBanner = `<div style="position:sticky;top:0;z-index:9999;background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0c4a6e;line-height:1.4;"><span style="font-size:16px;flex-shrink:0;">&#9993;</span><span>Facing any issues? Mail us at <a href="mailto:${appConfig.contactEmail}" style="color:#0284c7;font-weight:700;text-decoration:none;">${appConfig.contactEmail}</a> &mdash; you'll receive a quick reply.</span></div>`
-  const BANNER_MARKER = 'data-support-banner'
-  fs.readdirSync(distDir).forEach(f => {
-    if (!f.endsWith('.html') || generated.has(f)) return
-    const dest = path.join(distDir, f)
-    let content = fs.readFileSync(dest, 'utf8')
-    if (content.includes(BANNER_MARKER)) return  // already injected
-    content = content.replace(/(<body[^>]*>)/i, `$1<div ${BANNER_MARKER} style="position:sticky;top:0;z-index:9999;background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0c4a6e;line-height:1.4;"><span style="font-size:16px;flex-shrink:0;">&#9993;</span><span>Facing any issues? Mail us at <a href="mailto:${appConfig.contactEmail}" style="color:#0284c7;font-weight:700;text-decoration:none;">${appConfig.contactEmail}</a> &mdash; you\'ll receive a quick reply.</span></div>`)
-    fs.writeFileSync(dest, content)
-    console.log(`  Injected support banner: ${f}`)
-  })
 }

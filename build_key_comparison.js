@@ -220,6 +220,7 @@ const instColHeaders = allKeys.map(k =>
 ).join('')
 
 const html = `<!DOCTYPE html>
+<!-- Support: upsc.ai.stack@gmail.com — mail for a quick reply -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
