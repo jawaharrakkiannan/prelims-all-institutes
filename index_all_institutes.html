@@ -761,12 +761,12 @@ function renderResult(){
       if(showQ){
         var qData=null
         for(var qi=0;qi<QUESTIONS.questions.length;qi++){
-          if(QUESTIONS.questions[qi].question_number===row.c){qData=QUESTIONS.questions[qi];break}
+          if(QUESTIONS.questions[qi].number===row.c){qData=QUESTIONS.questions[qi];break}
         }
         if(qData){
           var qcHtml=''
-          if(qData.subject_tags&&qData.subject_tags.length){
-            qcHtml+='<span class="cq-subject">'+qData.subject_tags.join(' &bull; ')+'</span>'
+          if(qData.subject){
+            qcHtml+='<span class="cq-subject">'+qData.subject+'</span>'
           }
           if(qData.scenario_text){
             qcHtml+='<div class="cq-context">'+qData.scenario_text+'</div>'
@@ -777,18 +777,18 @@ function renderResult(){
           if(qData.assertion&&qData.assertion.text){
             qcHtml+='<div class="cq-assertion">'+qData.assertion.text+'</div>'
           }
-          qcHtml+='<div class="cq-lead">'+qData.stem+'</div>'
+          qcHtml+='<div class="cq-lead">'+qData.question+'</div>'
           if(qData.statements&&qData.statements.length){
             qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){
-              return '<li><span class="cq-stmt-lbl">'+st.label+'.</span>'+st.text+'</li>'
+              return '<li>'+st.text+'</li>'
             }).join('')+'</ul>'
           }
           if(qData.match_list){
             var ml=qData.match_list
             qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+ml.list1_header+'</th><th>'+ml.list2_header+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+p.list1_text+'</td><td>'+p.list2_number+'. '+p.list2_text+'</td></tr>'}).join('')+'</tbody></table></div>'
           }
-          if(qData.embedded_table&&qData.embedded_table.headers){
-            var et=qData.embedded_table
+          if(qData.table&&qData.table.headers){
+            var et=qData.table
             qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
           }
           if(qData.secondary_stem){
@@ -799,7 +799,7 @@ function renderResult(){
               return '<li><span class="cq-stmt-lbl">'+st.label+'.</span>'+st.text+'</li>'
             }).join('')+'</ul>'
           }
-          if(qData.tail) qcHtml+='<div class="cq-tail">'+qData.tail+'</div>'
+          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+qData.question_tail+'</div>'
           if(qData.options&&qData.options.length){
             qcHtml+='<div class="cq-options">'+qData.options.map(function(opt){
               return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+opt.text+'</span></div>'
