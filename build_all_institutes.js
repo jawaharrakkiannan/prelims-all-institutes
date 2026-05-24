@@ -255,6 +255,10 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg>
       UPSC 2026 Subject-wise Analysis
     </a>
+    <a href="/prelims_2026_institute_key_comparison.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+      Institutes Key Comparison
+    </a>
   </div>
 
   <div class="res-group">
@@ -285,7 +289,10 @@ h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C
 
   // Inject support banner into any static HTML files already present in dist/
   // (excludes the three files this build just generated)
-  const generated = new Set(['index.html', 'all-institutes-gs1-score-checker.html', 'all-institutes-csat-score-checker.html'])
+  // Build key comparison page
+  require('./build_key_comparison.js')
+
+  const generated = new Set(['index.html', 'all-institutes-gs1-score-checker.html', 'all-institutes-csat-score-checker.html', 'prelims_2026_institute_key_comparison.html'])
   const supportBanner = `<div style="position:sticky;top:0;z-index:9999;background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0c4a6e;line-height:1.4;"><span style="font-size:16px;flex-shrink:0;">&#9993;</span><span>Facing any issues? Mail us at <a href="mailto:${appConfig.contactEmail}" style="color:#0284c7;font-weight:700;text-decoration:none;">${appConfig.contactEmail}</a> &mdash; you'll receive a quick reply.</span></div>`
   const BANNER_MARKER = 'data-support-banner'
   fs.readdirSync(distDir).forEach(f => {
