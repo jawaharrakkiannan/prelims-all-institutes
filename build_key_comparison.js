@@ -103,7 +103,7 @@ for (const q of questions) qMap[String(q.number)] = q
 
 function it(s) { return (s || '').replace(/\*([^*]+)\*/g, '<em>$1</em>') }
 
-function buildQHtml(qData) {
+function buildQHtml(qData, optMarks) {
   if (!qData || !qData.question) return ''
   let h = ''
 
@@ -162,7 +162,9 @@ function buildQHtml(qData) {
     const longOpt = qData.options.some(o => (o.text || '').length > 40)
     h += '<div class="options' + (longOpt ? ' single-col' : '') + '">'
     for (const o of qData.options) {
-      h += '<div class="option"><span class="opt-key">' + o.key.toUpperCase() + '</span><span class="opt-text">' + it(o.text) + '</span></div>'
+      const mark = optMarks ? (optMarks[o.key.toUpperCase()] || null) : null
+      const cls = mark ? ' opt-' + mark : ''
+      h += '<div class="option' + cls + '"><span class="opt-key">' + o.key.toUpperCase() + '</span><span class="opt-text">' + it(o.text) + '</span></div>'
     }
     h += '</div>'
   }
@@ -179,6 +181,19 @@ for (let setAQ = 1; setAQ <= 100; setAQ++) {
   const nonNull = Object.values(answers).filter(v => v !== null)
   const unique  = [...new Set(nonNull)]
   const status  = nonNull.length >= 2 ? (unique.length === 1 ? 'agree' : 'disagree') : 'neutral'
+
+  // Compute which option letters to highlight in the question
+  let optMarks = null
+  if (nonNull.length >= 2) {
+    optMarks = {}
+    const markType = unique.length === 1 ? 'agree' : 'disagree'
+    const chosenOpts = new Set()
+    for (const v of nonNull) {
+      for (const part of String(v).split('/')) { if ('ABCD'.includes(part)) chosenOpts.add(part) }
+    }
+    for (const opt of chosenOpts) optMarks[opt] = markType
+  }
+
   const codeQNums = {
     A: setAQ,
     B: (invertedMap[setAQ] || {}).B || null,
@@ -188,7 +203,7 @@ for (let setAQ = 1; setAQ <= 100; setAQ++) {
   rowsBySetAQ[setAQ] = {
     setAQ,
     codeQNums,
-    qHtml: buildQHtml(qData),
+    qHtml: buildQHtml(qData, optMarks),
     subject: qData.subject || '',
     answers,
     status
@@ -268,6 +283,10 @@ td.td-q{text-align:left;vertical-align:top;padding:.7rem .9rem;color:#374151;fon
 .option{display:flex;align-items:flex-start;gap:.45rem;font-size:.86rem;padding:.38rem .6rem;border-radius:2px;border:1px solid #e2e8f0;background:transparent;color:#374151}
 .opt-key{display:inline-flex;align-items:center;justify-content:center;width:1.2rem;height:1.2rem;min-width:1.2rem;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:.63rem;font-weight:500;margin-top:.1rem;flex-shrink:0;border:1.5px solid #cbd5e1;color:#6b7280}
 .opt-text{line-height:1.45;color:inherit}
+.option.opt-agree{border-color:#22c55e;background:#f0fdf4}
+.option.opt-agree .opt-key{border-color:#22c55e;color:#15803d;background:#dcfce7}
+.option.opt-disagree{border-color:#f87171;background:#fef2f2}
+.option.opt-disagree .opt-key{border-color:#f87171;color:#dc2626;background:#fee2e2}
 td.td-ans{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;vertical-align:middle}
 td.ans-a{color:#7c3aed} td.ans-b{color:#0284c7} td.ans-c{color:#059669} td.ans-d{color:#d97706}
 td.ans-null{color:#D1D5DB;font-size:11px;font-weight:400}
