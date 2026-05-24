@@ -56,16 +56,18 @@ tr:hover td{background:var(--c-accent-bg)}
 .cq-wrap{min-width:320px;font-size:0.9rem;vertical-align:top;padding:12px 16px}
 .cq-subject{font-family:'JetBrains Mono',monospace;color:#5C4E3C;font-size:0.65rem;letter-spacing:.5px;display:block;margin-bottom:5px}
 .cq-lead{font-family:'Lora',Georgia,serif;font-size:0.9rem;line-height:1.78;color:#0C0A07;margin-bottom:8px}
-.cq-stmts{border-left:3px solid var(--c-accent-muted);padding-left:14px;margin:10px 0;list-style:none}
-.cq-stmts li{margin:6px 0;font-size:0.88rem;color:#1C1510;line-height:1.65}
-.cq-assertion{border-left:3px solid #1E40AF;padding:10px 14px;background:rgba(30,64,175,.08);margin:10px 0;font-size:0.88rem;line-height:1.65;font-family:'Lora',Georgia,serif}
+.cq-context{font-family:'Lora',Georgia,serif;font-size:0.88rem;line-height:1.75;color:#3B2E1F;margin-bottom:8px;font-style:italic}
+.cq-stmts{margin:8px 0 10px;list-style:none;padding:0;display:flex;flex-direction:column;gap:5px}
+.cq-stmts li{font-size:0.87rem;background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.18);border-left:3px solid var(--c-accent);border-radius:2px;padding:.4rem .75rem;line-height:1.65;color:#1C1510}
+.cq-stmt-lbl{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.78rem;margin-right:4px;color:var(--c-accent)}
+.cq-assertion{background:#eff6ff;border:1px solid #bfdbfe;border-radius:2px;padding:.55rem .8rem;font-style:italic;font-size:.87rem;margin:8px 0 10px;line-height:1.65;font-family:'Lora',Georgia,serif;color:#1e3a5f}
 .cq-qtable{border-collapse:collapse;width:100%;font-size:0.82rem;margin:8px 0}
-.cq-qtable th{background:var(--c-accent-bg);color:var(--c-accent);padding:6px 10px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;border-bottom:2px solid var(--c-accent)}
+.cq-qtable th{background:#1e293b;color:#f1f5f9;padding:6px 10px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase}
 .cq-qtable td{border:1px solid var(--c-accent-border);padding:6px 10px;color:#1C1510}
-.cq-tail{font-style:italic;color:#5C4E3C;margin-top:10px;font-size:0.88rem;line-height:1.65;font-family:'Lora',Georgia,serif}
-.cq-options{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
-.cq-option{display:flex;align-items:baseline;gap:8px;font-size:0.88rem;line-height:1.5}
-.cq-opt-key{font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;background:var(--c-accent-bg);border:1.5px solid var(--c-accent-muted);width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c-accent)}
+.cq-tail{font-style:italic;color:#14532d;background:#f0fdf4;border-left:3px solid #22c55e;padding:.3rem .65rem;margin-top:10px;font-size:0.865rem;line-height:1.65}
+.cq-options{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px}
+.cq-option{display:flex;align-items:flex-start;gap:7px;font-size:0.87rem;line-height:1.5;border:1px solid var(--c-accent-border);border-radius:2px;padding:.35rem .55rem}
+.cq-opt-key{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;border:1.5px solid var(--c-accent-muted);width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c-accent);margin-top:1px}
 .aq-lead{font-size:1.08rem;margin-bottom:.7rem;line-height:1.75;color:#1A1D2B}
 .aq-statements{list-style:none;margin:.5rem 0 .8rem .5rem;border-left:3px solid #C8D6E5;padding-left:1.1rem}
 .aq-statements li{font-size:1.04rem;margin-bottom:.35rem;line-height:1.65;color:#374151}
@@ -554,82 +556,63 @@ function renderResult(){
   function sArr(col){return col===state.subjSortCol?(state.subjSortDir===1?' &#8593;':' &#8595;'):''}
   function aArr(col){return col===state.accSortCol?(state.accSortDir===1?' &#8593;':' &#8595;'):''}
 
-  // ── Score cards (one per institute + official) ───────────────────────────────
+  // ── Score table (one row per institute + official) ──────────────────────────
   var totalMarks=TOTAL_Q*PAPER_CONFIG.correctMark
-  var cards=''
-  INSTITUTES_KEYS.forEach(function(key,i){
+  var scoreRows=''
+  INSTITUTES_KEYS.forEach(function(key){
     var pending=isKeyEmpty(key)
     if(pending){
-      cards+='<div class="res-card res-card--pend" style="--rc-accent:'+P+';animation-delay:'+(i*0.08)+'s">' +
-        '<div class="res-card__hd">' +
-          '<div>' +
-            '<div class="res-card__eye">Institute Key</div>' +
-            '<div class="res-card__nm">'+key.name+'</div>' +
-          '</div>' +
-          '<div class="res-card__bdg" style="border-color:#D1CAC0;color:#D1CAC0;">Pending</div>' +
-        '</div>' +
-        '<div style="padding:18px 20px;text-align:center;">' +
-          '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203; Key not yet uploaded</p>' +
-        '</div>' +
-      '</div>'
+      scoreRows+='<tr>' +
+        '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;color:#1C1510;">'+key.name+'</td>' +
+        '<td colspan="4" style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203;&nbsp;Key not yet uploaded</td>' +
+      '</tr>'
     }else{
       var sc=calcScore(key)
-      cards+='<div class="res-card" style="--rc-accent:'+P+';animation-delay:'+(i*0.08)+'s">' +
-        '<div class="res-card__hd">' +
-          '<div>' +
-            '<div class="res-card__eye">Institute Key</div>' +
-            '<div class="res-card__nm">'+key.name+'</div>' +
-          '</div>' +
-          '<div class="res-card__bdg">Institute</div>' +
-        '</div>' +
-        '<div class="res-score-wrap">' +
-          '<div class="res-score">'+sc.score.toFixed(2)+'<span class="res-score-den">/'+totalMarks+'</span></div>' +
-          '<span class="res-score-exam">'+APP_CONFIG.examName+' &bull; '+APP_CONFIG.examPaper+'</span>' +
-        '</div>' +
-        '<div class="res-stats">' +
-          '<div class="res-stat res-stat--ok"><span class="res-stat__n">'+sc.correct+'</span><span class="res-stat__l">Correct</span></div>' +
-          '<div class="res-stat res-stat--ng"><span class="res-stat__n">'+sc.wrong+'</span><span class="res-stat__l">Wrong</span></div>' +
-          '<div class="res-stat res-stat--sk"><span class="res-stat__n">'+sc.skip+'</span><span class="res-stat__l">Skipped</span></div>' +
-        '</div>' +
-      '</div>'
+      scoreRows+='<tr>' +
+        '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;color:#1C1510;">'+key.name+'</td>' +
+        '<td style="text-align:center;">' +
+          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#0B1929;">'+sc.score.toFixed(2)+'</span>' +
+          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>' +
+        '</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+sc.correct+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+sc.wrong+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+sc.skip+'</td>' +
+      '</tr>'
     }
   })
   var offRc='#1e40af'
   var offPending=isKeyEmpty(OFFICIAL_KEY)
   if(offPending){
-    cards+='<div class="res-card res-card--pend" style="--rc-accent:'+offRc+';animation-delay:'+(INSTITUTES_KEYS.length*0.08)+'s">' +
-      '<div class="res-card__hd">' +
-        '<div>' +
-          '<div class="res-card__eye">Official UPSC Key</div>' +
-          '<div class="res-card__nm">UPSC Official Answer Key</div>' +
-        '</div>' +
-        '<div class="res-card__bdg" style="border-color:#D1CAC0;color:#D1CAC0;">Pending</div>' +
-      '</div>' +
-      '<div style="padding:18px 20px;text-align:center;">' +
-        '<p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203; Official UPSC key not yet released</p>' +
-      '</div>' +
-    '</div>'
+    scoreRows+='<tr style="background:#EFF6FF;">' +
+      '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;color:'+offRc+';">UPSC Official Answer Key</td>' +
+      '<td colspan="4" style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9CA3AF;letter-spacing:1.5px;">&#9203;&nbsp;Official UPSC key not yet released</td>' +
+    '</tr>'
   }else{
     var offSc=calcScore(OFFICIAL_KEY)
-    cards+='<div class="res-card" style="--rc-accent:'+offRc+';animation-delay:'+(INSTITUTES_KEYS.length*0.08)+'s">' +
-      '<div class="res-card__hd">' +
-        '<div>' +
-          '<div class="res-card__eye">Official UPSC Key</div>' +
-          '<div class="res-card__nm">UPSC Official Answer Key</div>' +
-        '</div>' +
-        '<div class="res-card__bdg" style="border-color:'+offRc+';color:'+offRc+'">Official</div>' +
-      '</div>' +
-      '<div class="res-score-wrap">' +
-        '<div class="res-score">'+offSc.score.toFixed(2)+'<span class="res-score-den">/'+totalMarks+'</span></div>' +
-        '<span class="res-score-exam">'+APP_CONFIG.examName+' &bull; '+APP_CONFIG.examPaper+'</span>' +
-      '</div>' +
-      '<div class="res-stats">' +
-        '<div class="res-stat res-stat--ok"><span class="res-stat__n">'+offSc.correct+'</span><span class="res-stat__l">Correct</span></div>' +
-        '<div class="res-stat res-stat--ng"><span class="res-stat__n">'+offSc.wrong+'</span><span class="res-stat__l">Wrong</span></div>' +
-        '<div class="res-stat res-stat--sk"><span class="res-stat__n">'+offSc.skip+'</span><span class="res-stat__l">Skipped</span></div>' +
-      '</div>' +
-    '</div>'
+    scoreRows+='<tr style="background:#EFF6FF;">' +
+      '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;color:'+offRc+';">UPSC Official Answer Key</td>' +
+      '<td style="text-align:center;">' +
+        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:'+offRc+';">'+offSc.score.toFixed(2)+'</span>' +
+        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;color:#9CA3AF;margin-left:2px;">/'+totalMarks+'</span>' +
+      '</td>' +
+      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+offSc.correct+'</td>' +
+      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+offSc.wrong+'</td>' +
+      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+offSc.skip+'</td>' +
+    '</tr>'
   }
+  var cards='<div class="bk-card" style="overflow:hidden;margin-bottom:14px;animation:res-in .38s cubic-bezier(.22,1,.36,1) both;">' +
+    '<div class="bk-hd"><span class="bk-title">Scores by Institute</span></div>' +
+    '<div class="tbl-wrap"><table>' +
+      '<thead><tr>' +
+        '<th style="text-align:left;">Institute</th>' +
+        '<th style="text-align:center;">Score</th>' +
+        '<th style="text-align:center;white-space:nowrap;">&#10003;&nbsp;Correct</th>' +
+        '<th style="text-align:center;white-space:nowrap;">&#10007;&nbsp;Wrong</th>' +
+        '<th style="text-align:center;white-space:nowrap;">Unattempted</th>' +
+      '</tr></thead>' +
+      '<tbody>'+scoreRows+'</tbody>' +
+    '</table></div>' +
+  '</div>'
 
   // ── Table section ─────────────────────────────────────────────────────────────
   var tableSection='',subjectSection='',accuracySection=''
@@ -753,26 +736,50 @@ function renderResult(){
       if(showQ){
         var qData=null
         for(var qi=0;qi<QUESTIONS.questions.length;qi++){
-          if(QUESTIONS.questions[qi].number===row.c){qData=QUESTIONS.questions[qi];break}
+          if(QUESTIONS.questions[qi].question_number===row.c){qData=QUESTIONS.questions[qi];break}
         }
         if(qData){
           var qcHtml=''
-          qcHtml+='<div class="cq-lead">'+qData.question+'</div>'
+          if(qData.subject_tags&&qData.subject_tags.length){
+            qcHtml+='<span class="cq-subject">'+qData.subject_tags.join(' &bull; ')+'</span>'
+          }
+          if(qData.scenario_text){
+            qcHtml+='<div class="cq-context">'+qData.scenario_text+'</div>'
+          }
+          if(qData.context_intro){
+            qcHtml+='<div class="cq-context">'+qData.context_intro+'</div>'
+          }
+          if(qData.assertion&&qData.assertion.text){
+            qcHtml+='<div class="cq-assertion">'+qData.assertion.text+'</div>'
+          }
+          qcHtml+='<div class="cq-lead">'+qData.stem+'</div>'
           if(qData.statements&&qData.statements.length){
-            qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){return '<li>'+st+'</li>'}).join('')+'</ul>'
+            qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){
+              return '<li><span class="cq-stmt-lbl">'+st.label+'.</span>'+st.text+'</li>'
+            }).join('')+'</ul>'
           }
-          if(qData.assertion_reason){
-            var ar=qData.assertion_reason
-            qcHtml+='<div class="cq-assertion"><b>Statement I:</b> '+(ar.A||ar.assertion||'')+'<br><b>Statement II:</b> '+(ar.R||ar.reason||'')+'</div>'
+          if(qData.match_list){
+            var ml=qData.match_list
+            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+ml.list1_header+'</th><th>'+ml.list2_header+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+p.list1_text+'</td><td>'+p.list2_number+'. '+p.list2_text+'</td></tr>'}).join('')+'</tbody></table></div>'
           }
-          if(qData.table&&qData.table.headers){
-            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+qData.table.headers.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+qData.table.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
+          if(qData.embedded_table&&qData.embedded_table.headers){
+            var et=qData.embedded_table
+            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
           }
-          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+qData.question_tail+'</div>'
-          qcHtml+='<div class="cq-options">'+OPTIONS.map(function(opt){
-            if(!qData.options[opt]) return ''
-            return '<div class="cq-option"><span class="cq-opt-key">'+opt+'</span><span>'+qData.options[opt]+'</span></div>'
-          }).join('')+'</div>'
+          if(qData.secondary_stem){
+            qcHtml+='<div class="cq-lead" style="margin-top:8px;">'+qData.secondary_stem+'</div>'
+          }
+          if(qData.secondary_statements&&qData.secondary_statements.length){
+            qcHtml+='<ul class="cq-stmts">'+qData.secondary_statements.map(function(st){
+              return '<li><span class="cq-stmt-lbl">'+st.label+'.</span>'+st.text+'</li>'
+            }).join('')+'</ul>'
+          }
+          if(qData.tail) qcHtml+='<div class="cq-tail">'+qData.tail+'</div>'
+          if(qData.options&&qData.options.length){
+            qcHtml+='<div class="cq-options">'+qData.options.map(function(opt){
+              return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+opt.text+'</span></div>'
+            }).join('')+'</div>'
+          }
           qCell='<td class="cq-wrap">'+qcHtml+'</td>'
         }else{
           qCell='<td class="cq-wrap">&mdash;</td>'
