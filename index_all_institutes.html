@@ -59,6 +59,7 @@ tr:hover td{background:var(--c-accent-bg)}
 .cq-subject{font-family:'JetBrains Mono',monospace;color:#5C4E3C;font-size:0.65rem;letter-spacing:.5px;display:block;margin-bottom:5px}
 .cq-lead{font-family:'Lora',Georgia,serif;font-size:0.9rem;line-height:1.78;color:#0C0A07;margin-bottom:8px}
 .cq-context{font-family:'Lora',Georgia,serif;font-size:0.88rem;line-height:1.75;color:#3B2E1F;margin-bottom:8px;font-style:italic}
+.cq-passage{font-family:'Lora',Georgia,serif;font-size:0.86rem;line-height:1.78;color:#1e3a5f;background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:10px}
 .cq-stmts{margin:8px 0 10px;list-style:none;padding:0;display:flex;flex-direction:column;gap:5px}
 .cq-stmts li{font-size:0.87rem;background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.18);border-left:3px solid var(--c-accent);border-radius:2px;padding:.4rem .75rem;line-height:1.65;color:#1C1510}
 .cq-stmt-lbl{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.78rem;margin-right:4px;color:var(--c-accent)}
@@ -114,6 +115,10 @@ tr:hover td{background:var(--c-accent-bg)}
 .bk-ctrl{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--c-accent-divider)}
 .bk-filt{padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--c-accent-divider);background:#FAF8F4}
 </style>
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId setPersonPropertiesForFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_oNitam9jGzdguHb734fucuTzPqK6RsFkqJairewopnhy',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only'})
+</script>
 </head>
 <body>
 <!-- INJECT_CONFIG -->
@@ -189,7 +194,7 @@ function isKeyEmpty(key){return Object.keys(key.answers).every(function(k){retur
 function canonQ(pc,q){
   if(pc==='A') return q
   var m=PAPER_MAPPING[pc]
-  return m&&m[q]?m[q]:q
+  return m&&m[q]?Number(m[q]):q
 }
 
 function calcScore(key){
@@ -676,8 +681,11 @@ function renderResult(){
       : ''
 
     var subjectMap={}
+    var isCsatPaper=PAPER_CONFIG.paper==='CSAT'
+    var csatCatLabel={reading_comprehension:'Reading Comprehension',reasoning_ability:'Reasoning Ability',aptitude:'Aptitude'}
     QUESTIONS.questions.forEach(function(q){
-      if(q.subject_group&&!subjectMap[q.subject_group]) subjectMap[q.subject_group]=q.subject_group
+      if(isCsatPaper){if(q.category&&!subjectMap[q.category]) subjectMap[q.category]=csatCatLabel[q.category]||q.category}
+      else{if(q.subject_group&&!subjectMap[q.subject_group]) subjectMap[q.subject_group]=q.subject_group}
     })
     var subjectBtns=hasQData
       ? (function(){
@@ -685,7 +693,7 @@ function renderResult(){
           var mkBtn=function(sg,lbl){var a=state.filterSubject===sg;return '<button data-subject="'+sg+'" style="padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1.5px solid '+(a?'var(--c-accent)':'var(--c-accent-border)')+';border-radius:4px;cursor:pointer;background:'+(a?'var(--c-accent)':'white')+';color:'+(a?'var(--c-on-accent)':'var(--c-accent-text-dark)') +';">'+(lbl||sg)+'</button>'}
           return '<div style="display:grid;grid-template-columns:min-content 1fr 1fr;column-gap:12px;padding-bottom:8px;border-bottom:1px solid #E8E4DF;margin-bottom:8px;">' +
             '<div style="display:flex;align-items:flex-start;">'+mkBtn('all','All')+'</div>' +
-            '<div style="grid-column:span 2;display:flex;gap:5px;flex-wrap:wrap;">'+sgs.map(function(sg){return mkBtn(sg)}).join('')+'</div>' +
+            '<div style="grid-column:span 2;display:flex;gap:5px;flex-wrap:wrap;">'+sgs.map(function(sg){return mkBtn(sg,subjectMap[sg])}).join('')+'</div>' +
             '</div>'
         })()
       : ''
@@ -711,7 +719,7 @@ function renderResult(){
       subjectRows=singleRows.filter(function(row){
         var qd=null
         for(var fi=0;fi<QUESTIONS.questions.length;fi++){if(QUESTIONS.questions[fi].number===row.c){qd=QUESTIONS.questions[fi];break}}
-        return qd&&qd.subject_group===state.filterSubject
+        return qd&&(isCsatPaper?qd.category:qd.subject_group)===state.filterSubject
       })
     }
     var sCnt={all:subjectRows.length,correct:0,wrong:0,skipped:0}
@@ -766,45 +774,62 @@ function renderResult(){
         }
         if(qData){
           var qcHtml=''
-          if(qData.subject){
-            qcHtml+='<span class="cq-subject">'+qData.subject+'</span>'
-          }
-          if(qData.scenario_text){
-            qcHtml+='<div class="cq-context">'+itl(qData.scenario_text)+'</div>'
-          }
-          if(qData.context_intro){
-            qcHtml+='<div class="cq-context">'+itl(qData.context_intro)+'</div>'
-          }
-          if(qData.assertion&&qData.assertion.text){
-            qcHtml+='<div class="cq-assertion">'+itl(qData.assertion.text)+'</div>'
-          }
-          qcHtml+='<div class="cq-lead">'+itl(qData.question)+'</div>'
-          if(qData.statements&&qData.statements.length){
-            qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){
-              return '<li>'+itl(st.text)+'</li>'
-            }).join('')+'</ul>'
-          }
-          if(qData.match_list){
-            var ml=qData.match_list
-            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+itl(ml.list1_header)+'</th><th>'+itl(ml.list2_header)+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+itl(p.list1_text)+'</td><td>'+p.list2_number+'. '+itl(p.list2_text)+'</td></tr>'}).join('')+'</tbody></table></div>'
-          }
-          if(qData.table&&qData.table.headers){
-            var et=qData.table
-            qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+itl(h)+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+itl(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
-          }
-          if(qData.secondary_stem){
-            qcHtml+='<div class="cq-lead" style="margin-top:8px;">'+itl(qData.secondary_stem)+'</div>'
-          }
-          if(qData.secondary_statements&&qData.secondary_statements.length){
-            qcHtml+='<ul class="cq-stmts">'+qData.secondary_statements.map(function(st){
-              return '<li>'+itl(st.text)+'</li>'
-            }).join('')+'</ul>'
-          }
-          if(qData.question_tail) qcHtml+='<div class="cq-tail">'+itl(qData.question_tail)+'</div>'
-          if(qData.options&&qData.options.length){
-            qcHtml+='<div class="cq-options">'+qData.options.map(function(opt){
-              return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+itl(opt.text)+'</span></div>'
-            }).join('')+'</div>'
+          if(PAPER_CONFIG.paper==='CSAT'){
+            // ── CSAT renderer ─────────────────────────────────────────
+            var catMap={reading_comprehension:'Reading Comprehension',reasoning_ability:'Reasoning Ability',aptitude:'Aptitude'}
+            var catLabel=catMap[qData.category]||qData.category||''
+            if(catLabel||qData.topic) qcHtml+='<span class="cq-subject">'+(catLabel&&qData.topic?catLabel+' · '+qData.topic:catLabel||qData.topic)+'</span>'
+            if(qData.instruction_block&&CSAT_BLOCKS[qData.instruction_block]){
+              qcHtml+='<div class="cq-context">'+itl(CSAT_BLOCKS[qData.instruction_block].text)+'</div>'
+            }
+            if(qData.passage_id&&CSAT_PASSAGES[qData.passage_id]){
+              qcHtml+='<div class="cq-passage">'+itl(CSAT_PASSAGES[qData.passage_id].text)+'</div>'
+            }
+            qcHtml+='<div class="cq-lead">'+itl(qData.text)+'</div>'
+            if(qData.statement_I){
+              qcHtml+='<ul class="cq-stmts"><li><strong>Statement I:</strong> '+itl(qData.statement_I)+'</li>'+(qData.statement_II?'<li><strong>Statement II:</strong> '+itl(qData.statement_II)+'</li>':'')+'</ul>'
+            }
+            if(qData.table&&qData.table.headers){
+              var etC=qData.table
+              qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+etC.headers.map(function(h){return '<th>'+itl(h)+'</th>'}).join('')+'</tr></thead><tbody>'+etC.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+itl(String(c))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
+            }
+            if(qData.options&&qData.options.length){
+              qcHtml+='<div class="cq-options" style="grid-template-columns:1fr;">'+qData.options.map(function(opt){
+                if(typeof opt==='string'){
+                  var m=opt.match(/^\(([a-d])\)\s*([\s\S]*)$/i)
+                  return m?'<div class="cq-option"><span class="cq-opt-key">'+m[1].toUpperCase()+'</span><span>'+itl(m[2])+'</span></div>':'<div class="cq-option">'+itl(opt)+'</div>'
+                }
+                return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+itl(opt.text)+'</span></div>'
+              }).join('')+'</div>'
+            }
+          } else {
+            // ── GS renderer ───────────────────────────────────────────
+            if(qData.subject) qcHtml+='<span class="cq-subject">'+qData.subject+'</span>'
+            if(qData.scenario_text) qcHtml+='<div class="cq-context">'+itl(qData.scenario_text)+'</div>'
+            if(qData.context_intro) qcHtml+='<div class="cq-context">'+itl(qData.context_intro)+'</div>'
+            if(qData.assertion&&qData.assertion.text) qcHtml+='<div class="cq-assertion">'+itl(qData.assertion.text)+'</div>'
+            qcHtml+='<div class="cq-lead">'+itl(qData.question)+'</div>'
+            if(qData.statements&&qData.statements.length){
+              qcHtml+='<ul class="cq-stmts">'+qData.statements.map(function(st){return '<li>'+itl(st.text)+'</li>'}).join('')+'</ul>'
+            }
+            if(qData.match_list){
+              var ml=qData.match_list
+              qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr><th>'+itl(ml.list1_header)+'</th><th>'+itl(ml.list2_header)+'</th></tr></thead><tbody>'+ml.pairs.map(function(p){return '<tr><td>'+p.key+'. '+itl(p.list1_text)+'</td><td>'+p.list2_number+'. '+itl(p.list2_text)+'</td></tr>'}).join('')+'</tbody></table></div>'
+            }
+            if(qData.table&&qData.table.headers){
+              var et=qData.table
+              qcHtml+='<div style="overflow-x:auto;"><table class="cq-qtable"><thead><tr>'+et.headers.map(function(h){return '<th>'+itl(h)+'</th>'}).join('')+'</tr></thead><tbody>'+et.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+itl(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'
+            }
+            if(qData.secondary_stem) qcHtml+='<div class="cq-lead" style="margin-top:8px;">'+itl(qData.secondary_stem)+'</div>'
+            if(qData.secondary_statements&&qData.secondary_statements.length){
+              qcHtml+='<ul class="cq-stmts">'+qData.secondary_statements.map(function(st){return '<li>'+itl(st.text)+'</li>'}).join('')+'</ul>'
+            }
+            if(qData.question_tail) qcHtml+='<div class="cq-tail">'+itl(qData.question_tail)+'</div>'
+            if(qData.options&&qData.options.length){
+              qcHtml+='<div class="cq-options">'+qData.options.map(function(opt){
+                return '<div class="cq-option"><span class="cq-opt-key">'+opt.key.toUpperCase()+'</span><span>'+itl(opt.text)+'</span></div>'
+              }).join('')+'</div>'
+            }
           }
           qCell='<td class="cq-wrap">'+qcHtml+'</td>'
         }else{

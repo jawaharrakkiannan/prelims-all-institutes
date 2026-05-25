@@ -1,0 +1,40 @@
+{
+  "_comment": "Schema for a single CSAT question. Use this as prompt template for Claude API image extraction.",
+  "schema": {
+    "q_no": "integer — question number as printed",
+    "category": "one of: reading_comprehension | reasoning_ability | aptitude",
+    "topic": "string — specific topic (e.g. 'Circular Arrangement', 'HCF and LCM', 'Inference from Passage')",
+    "passage_id": "string or null — if question belongs to a passage, a snake_case id for that passage",
+    "text": "string — full question text verbatim, including numbered sub-statements if any",
+    "statement_I": "string or null — for data sufficiency questions only",
+    "statement_II": "string or null — for data sufficiency questions only",
+    "instruction_block": "string or null — id of the direction block this question falls under (e.g. 'data_sufficiency_5')",
+    "table": "object or null — if the question has a table, structured as {headers: [], rows: [[]]}",
+    "options": ["(a) ...", "(b) ...", "(c) ...", "(d) ..."]
+  },
+  "passage_schema": {
+    "id": "string — snake_case identifier",
+    "questions": ["list of q_no integers that reference this passage"],
+    "text": "string — full passage text verbatim"
+  },
+  "instruction_block_schema": {
+    "id": "string",
+    "questions": ["list of q_no integers"],
+    "text": "string — the direction text",
+    "options_legend": {
+      "a": "string",
+      "b": "string",
+      "c": "string",
+      "d": "string"
+    }
+  },
+  "full_paper_schema": {
+    "paper": "CSAT_2026",
+    "set": "A | B | C | D",
+    "total_questions": 80,
+    "passages": {"<passage_id>": "<passage_object>"},
+    "instruction_blocks": {"<block_id>": "<block_object>"},
+    "questions": ["<array of question objects>"]
+  },
+  "claude_api_prompt": "You are extracting questions from a UPSC CSAT exam paper image. For each question visible on this page, output a JSON array of question objects strictly following the schema. Rules:\n1. Extract text VERBATIM — do not paraphrase or summarise.\n2. Ignore all handwritten scribbles; use only printed text.\n3. Questions flow left column top-to-bottom, then right column top-to-bottom.\n4. For passage-based questions, include the passage_id (derive from passage topic in snake_case).\n5. For data sufficiency questions (Directions for 5 items), set instruction_block to 'data_sufficiency_5' and populate statement_I and statement_II.\n6. For table questions, populate the 'table' field with structured rows.\n7. Classify category as: reading_comprehension (passage-based), reasoning_ability (logic/arrangement/coding), or aptitude (maths/quantitative).\n8. Output ONLY valid JSON — no markdown, no explanation."
+}

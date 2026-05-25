@@ -105,7 +105,19 @@ const officialKey = {
   ...officialKeyRaw,
   answers: remapToSetA(officialKeyRaw.answers, officialKeyRaw.code, mapping, officialKeyPath)
 }
-const questions = readJsonOptional(questionsPath, { questions: [] })
+let questionsRaw = readJsonOptional(questionsPath, { questions: [] })
+let csatPassages = {}
+let csatBlocks = {}
+let questions = questionsRaw
+if (isCsat && Array.isArray(questionsRaw.questions)) {
+  csatPassages = questionsRaw.passages || {}
+  csatBlocks   = questionsRaw.instruction_blocks || {}
+  questions = {
+    questions: questionsRaw.questions.map(function(q) {
+      return Object.assign({}, q, { number: q.q_no })
+    })
+  }
+}
 
 const paperConfig = isCsat
   ? { paper: 'CSAT', totalQ: 80,  perPage: 10, totalPages: 8,  correctMark: 2.50, wrongMark: 0.8333 }
@@ -160,6 +172,8 @@ const INSTITUTES_KEYS = ${esc(institutesKeys)};
 const OFFICIAL_KEY    = ${esc(officialKey)};
 const PAPER_MAPPING   = ${esc(mapping)};
 const QUESTIONS       = ${esc(questions)};
+const CSAT_PASSAGES   = ${esc(csatPassages)};
+const CSAT_BLOCKS     = ${esc(csatBlocks)};
 const PAPER_CONFIG    = ${esc(paperConfig)};
 const SUPABASE_CONFIG = ${esc(supabaseConfig)};
 </script>`
