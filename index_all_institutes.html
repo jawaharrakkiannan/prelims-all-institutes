@@ -1070,6 +1070,11 @@ function renderProfile(){
 }
 
 // ── Event binding ────────────────────────────────────────────────────────────
+function shouldShowProfile(){
+  var att=Object.keys(state.responses).length
+  return PAPER_CONFIG.paper==='CSAT'?att>=30:att>=75
+}
+
 function bind(){
   qsa('[data-paper]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.paper;render()})})
   on('edit-paper-entry','click',function(){state.editingPaper=true;render()})
@@ -1077,7 +1082,7 @@ function bind(){
   on('edit-paper-review','click',function(){state.editPaperReview=true;render()})
   qsa('[data-setpaper-review]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.setpaperReview;state.editPaperReview=false;render()})})
   on('start-btn','click',function(){if(!state.paperCode)return;state.screen='entry';state.page=1;render()})
-  on('view-result-btn','click',function(){state.screen='profile';top0();render()})
+  on('view-result-btn','click',function(){state.screen=shouldShowProfile()?'profile':'result';top0();render()})
   on('new-attempt-btn','click',function(){state.confirmingNewAttempt=true;render()})
   on('confirm-new-attempt-yes','click',function(){
     try{localStorage.removeItem(STORE_KEY)}catch(e){}
@@ -1112,7 +1117,7 @@ function bind(){
     })
   })
   on('back-btn','click',function(){state.editPaperReview=false;state.screen='entry';state.page=1;top0();render()})
-  on('submit-btn','click',function(){state.editPaperReview=false;state.screen='profile';top0();render()})
+  on('submit-btn','click',function(){state.editPaperReview=false;state.screen=shouldShowProfile()?'profile':'result';top0();render()})
 
   qsa('[data-place]').forEach(function(r){
     r.addEventListener('click',function(){
