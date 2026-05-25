@@ -137,7 +137,7 @@ document.title=APP_NAME
 
 var scoreSent=false
 
-const state={screen:'landing',paperCode:null,responses:{},page:1,sortCol:null,sortDir:1,editingPaper:false,editPaperReview:false,tableView:0,confirmingNewAttempt:false,showQuestions:false,filterSubject:'all',filterStatus:'all',subjTableCollapsed:false,accTableCollapsed:false,qTableCollapsed:false,subjSortCol:'attPct',subjSortDir:-1,accSortCol:'accPct',accSortDir:-1,selectedInstituteIdx:0,candidateName:'',candidatePhone:'',candidatePlace:'',candidatePlaceOther:'',profileErrors:{}}
+const state={screen:'landing',paperCode:null,responses:{},page:1,sortCol:null,sortDir:1,editingPaper:false,editPaperReview:false,tableView:0,confirmingNewAttempt:false,showQuestions:false,filterSubject:'all',filterStatus:'all',subjTableCollapsed:false,accTableCollapsed:false,qTableCollapsed:false,subjSortCol:'attPct',subjSortDir:-1,accSortCol:'accPct',accSortDir:-1,selectedInstituteIdx:0,candidateName:'',candidatePhone:'',candidatePlace:'',candidatePlaceOther:'',profileErrors:{},profileSubmitted:false}
 
 // Restore persisted state on load (window.__DL_STATE__ set by downloaded file takes priority)
 try{
@@ -165,6 +165,7 @@ try{
     state.candidatePhone=_p.candidatePhone||''
     state.candidatePlace=_p.candidatePlace||''
     state.candidatePlaceOther=_p.candidatePlaceOther||''
+    state.profileSubmitted=_p.profileSubmitted||false
   }
 }catch(e){}
 
@@ -174,7 +175,7 @@ function saveState(){
       paperCode:state.paperCode,responses:state.responses,
       page:state.page,screen:state.screen,
       sortCol:state.sortCol,sortDir:state.sortDir,tableView:state.tableView||0,
-      showQuestions:state.showQuestions,filterSubject:state.filterSubject,filterStatus:state.filterStatus,subjTableCollapsed:state.subjTableCollapsed,accTableCollapsed:state.accTableCollapsed,qTableCollapsed:state.qTableCollapsed,subjSortCol:state.subjSortCol,subjSortDir:state.subjSortDir,accSortCol:state.accSortCol,accSortDir:state.accSortDir,selectedInstituteIdx:state.selectedInstituteIdx,candidateName:state.candidateName,candidatePhone:state.candidatePhone,candidatePlace:state.candidatePlace,candidatePlaceOther:state.candidatePlaceOther
+      showQuestions:state.showQuestions,filterSubject:state.filterSubject,filterStatus:state.filterStatus,subjTableCollapsed:state.subjTableCollapsed,accTableCollapsed:state.accTableCollapsed,qTableCollapsed:state.qTableCollapsed,subjSortCol:state.subjSortCol,subjSortDir:state.subjSortDir,accSortCol:state.accSortCol,accSortDir:state.accSortDir,selectedInstituteIdx:state.selectedInstituteIdx,candidateName:state.candidateName,candidatePhone:state.candidatePhone,candidatePlace:state.candidatePlace,candidatePlaceOther:state.candidatePlaceOther,profileSubmitted:state.profileSubmitted
     }))
   }catch(e){}
 }
@@ -317,8 +318,7 @@ function render(){
     if(state.screen==='landing') app.innerHTML=renderLanding()
     else if(state.screen==='entry') app.innerHTML=renderEntry()
     else if(state.screen==='review') app.innerHTML=renderReview()
-    else if(state.screen==='profile') app.innerHTML=renderProfile()
-    else if(state.screen==='result'){app.innerHTML=renderResult();postScore()}
+    else if(state.screen==='result'){app.innerHTML=renderResult();if(!shouldShowProfile()||state.profileSubmitted)postScore()}
     bind()
   }catch(e){showRenderError()}
 }
@@ -1016,11 +1016,13 @@ function renderResult(){
         '</a>' +
       '</div>' +
     '</div>' +
-  '</div>'
+  '</div>' +
+  renderProfileModal()
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
-function renderProfile(){
+// ── Profile Modal ─────────────────────────────────────────────────────────────
+function renderProfileModal(){
+  if(!shouldShowProfile()||state.profileSubmitted) return ''
   var places=['Chennai','Delhi / NCR','Bangalore / Hyderabad','Trivandrum','Others']
   var errs=state.profileErrors||{}
   var nameVal=(state.candidateName||'').replace(/"/g,'&quot;')
@@ -1028,44 +1030,42 @@ function renderProfile(){
 
   var placeHtml=places.map(function(p){
     var sel=state.candidatePlace===p
-    return '<label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:1.5px solid '+(sel?P:'#E6E0D5')+';background:'+(sel?'#fff7ed':'#fff')+';cursor:pointer;margin-bottom:8px;transition:border .15s;">' +
-      '<input type="radio" name="prof-place" data-place="'+p+'" '+(sel?'checked':'')+' style="accent-color:'+P+';width:16px;height:16px;flex-shrink:0;">' +
-      '<span style="font-size:14px;font-weight:'+(sel?'700':'500')+';color:#1A1D2B;">'+p+'</span>' +
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1.5px solid '+(sel?P:'#E6E0D5')+';background:'+(sel?'#fff7ed':'#fff')+';cursor:pointer;margin-bottom:7px;">' +
+      '<input type="radio" name="prof-place" data-place="'+p+'" '+(sel?'checked':'')+' style="accent-color:'+P+';width:15px;height:15px;flex-shrink:0;">' +
+      '<span style="font-size:13.5px;font-weight:'+(sel?'700':'500')+';color:#1A1D2B;">'+p+'</span>' +
     '</label>'
   }).join('')
 
   var otherBox=state.candidatePlace==='Others'
-    ? '<div style="margin:-4px 0 8px 0;">' +
+    ? '<div style="margin:-3px 0 7px 0;">' +
         '<input id="profile-place-other" type="text" placeholder="Enter your city / place" value="'+(state.candidatePlaceOther||'').replace(/"/g,'&quot;')+'" ' +
-        'style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid '+(errs.place?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;">' +
+        'style="width:100%;padding:11px 13px;border-radius:9px;border:1.5px solid '+(errs.place?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;">' +
       '</div>'
     : ''
 
-  return '<div class="wrap" style="padding-top:32px;padding-bottom:60px;">' +
-    '<div style="text-align:center;margin-bottom:24px;">' +
-      '<p style="font-family:\'Playfair Display\',serif;font-size:20px;font-weight:700;color:#1A1D2B;margin-bottom:6px;">One last step</p>' +
-      '<p style="font-size:13px;color:#5B6375;">Help us understand who is using this tool.</p>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div style="margin-bottom:18px;">' +
-        '<label style="display:block;font-size:11px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Name</label>' +
-        '<input id="profile-name" type="text" placeholder="e.g. Priya Sharma" value="'+nameVal+'" ' +
-        'autocomplete="name" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid '+(errs.name?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;">' +
-        (errs.name?'<p style="font-size:11px;color:#dc2626;margin-top:5px;">'+errs.name+'</p>':'') +
+  return '<div id="profile-modal" style="position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(11,25,41,.6);backdrop-filter:blur(3px);">' +
+    '<div style="background:#F7F3EA;border-radius:18px;padding:24px 22px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.3);">' +
+      '<p style="font-family:\'Playfair Display\',serif;font-size:18px;font-weight:700;color:#1A1D2B;margin-bottom:3px;">One last step</p>' +
+      '<p style="font-size:12.5px;color:#5B6375;margin-bottom:18px;">Help us understand who is using this tool.</p>' +
+      '<div style="margin-bottom:15px;">' +
+        '<label style="display:block;font-size:10.5px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">Name</label>' +
+        '<input id="profile-name" type="text" placeholder="e.g. Priya Sharma" value="'+nameVal+'" autocomplete="name" ' +
+        'style="width:100%;padding:11px 13px;border-radius:9px;border:1.5px solid '+(errs.name?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;background:#fff;">' +
+        (errs.name?'<p style="font-size:11px;color:#dc2626;margin-top:4px;">'+errs.name+'</p>':'') +
       '</div>' +
-      '<div style="margin-bottom:18px;">' +
-        '<label style="display:block;font-size:11px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Phone Number</label>' +
-        '<input id="profile-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" value="'+phoneVal+'" ' +
-        'autocomplete="tel" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid '+(errs.phone?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;">' +
-        (errs.phone?'<p style="font-size:11px;color:#dc2626;margin-top:5px;">'+errs.phone+'</p>':'') +
+      '<div style="margin-bottom:15px;">' +
+        '<label style="display:block;font-size:10.5px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">Phone Number</label>' +
+        '<input id="profile-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" value="'+phoneVal+'" autocomplete="tel" ' +
+        'style="width:100%;padding:11px 13px;border-radius:9px;border:1.5px solid '+(errs.phone?'#dc2626':'#E6E0D5')+';font-size:14px;outline:none;font-family:inherit;background:#fff;">' +
+        (errs.phone?'<p style="font-size:11px;color:#dc2626;margin-top:4px;">'+errs.phone+'</p>':'') +
       '</div>' +
-      '<div>' +
-        '<label style="display:block;font-size:11px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">Place</label>' +
+      '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-size:10.5px;font-weight:700;color:#5B6375;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Place</label>' +
         placeHtml + otherBox +
         (errs.place?'<p style="font-size:11px;color:#dc2626;margin-top:2px;">'+errs.place+'</p>':'') +
       '</div>' +
+      '<button id="profile-submit" style="width:100%;padding:13px;background:'+P+';color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.01em;">Continue to Score &rarr;</button>' +
     '</div>' +
-    '<button id="profile-submit" style="width:100%;padding:15px;background:'+P+';color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.01em;margin-top:4px;">View My Score &rarr;</button>' +
   '</div>'
 }
 
@@ -1082,7 +1082,7 @@ function bind(){
   on('edit-paper-review','click',function(){state.editPaperReview=true;render()})
   qsa('[data-setpaper-review]').forEach(function(b){b.addEventListener('click',function(){state.paperCode=b.dataset.setpaperReview;state.editPaperReview=false;render()})})
   on('start-btn','click',function(){if(!state.paperCode)return;state.screen='entry';state.page=1;render()})
-  on('view-result-btn','click',function(){state.screen=shouldShowProfile()?'profile':'result';top0();render()})
+  on('view-result-btn','click',function(){state.screen='result';top0();render()})
   on('new-attempt-btn','click',function(){state.confirmingNewAttempt=true;render()})
   on('confirm-new-attempt-yes','click',function(){
     try{localStorage.removeItem(STORE_KEY)}catch(e){}
@@ -1091,7 +1091,7 @@ function bind(){
     state.sortCol=null;state.sortDir=1;state.editingPaper=false;state.editPaperReview=false;state.confirmingNewAttempt=false
     state.showQuestions=false;state.filterSubject='all';state.filterStatus='all'
     state.subjSortCol=null;state.subjSortDir=-1;state.accSortCol=null;state.accSortDir=-1
-    state.candidateName='';state.candidatePhone='';state.candidatePlace='';state.candidatePlaceOther='';state.profileErrors={}
+    state.candidateName='';state.candidatePhone='';state.candidatePlace='';state.candidatePlaceOther='';state.profileErrors={};state.profileSubmitted=false
     render()
   })
   on('confirm-new-attempt-no','click',function(){state.confirmingNewAttempt=false;render()})
@@ -1117,7 +1117,7 @@ function bind(){
     })
   })
   on('back-btn','click',function(){state.editPaperReview=false;state.screen='entry';state.page=1;top0();render()})
-  on('submit-btn','click',function(){state.editPaperReview=false;state.screen=shouldShowProfile()?'profile':'result';top0();render()})
+  on('submit-btn','click',function(){state.editPaperReview=false;state.screen='result';top0();render()})
 
   qsa('[data-place]').forEach(function(r){
     r.addEventListener('click',function(){
@@ -1159,7 +1159,9 @@ function bind(){
     state.candidateName=nt
     state.candidatePhone=pt
     state.candidatePlace=pl==='Others'?placeOther.trim():pl
-    state.screen='result';top0();render()
+    state.profileSubmitted=true
+    postScore()
+    render()
   })
 
   qsa('th[data-col]').forEach(function(th){
