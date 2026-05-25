@@ -282,6 +282,10 @@ posthog.init('phc_oNitam9jGzdguHb734fucuTzPqK6RsFkqJairewopnhy',{api_host:'https
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
       UPSC 2026 CSAT Question Paper
     </a>
+    <a href="/prelims_2026_csat_key_comparison.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+      Institute CSAT Key Comparison
+    </a>
   </div>
 
   <div class="res-group">
@@ -310,6 +314,7 @@ posthog.init('phc_oNitam9jGzdguHb734fucuTzPqK6RsFkqJairewopnhy',{api_host:'https
   fs.writeFileSync(path.join(distDir, 'index.html'), landing)
   console.log('Built: dist/index.html (paper selector)')
 
-  // Build key comparison page
+  // Build key comparison pages
   require('./build_key_comparison.js')
+  require('./build_csat_key_comparison.js')
 }
