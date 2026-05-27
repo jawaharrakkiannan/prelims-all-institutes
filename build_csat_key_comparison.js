@@ -84,7 +84,7 @@ const allKeys = [...institutes,...(officialHasAnswers?[{name:'UPSC Official',ans
 
 function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function parseOpt(s){const m=String(s||'').match(/^\(([a-d])\)\s*([\s\S]*)$/i);return m?{key:m[1].toUpperCase(),text:m[2].trim()}:{key:'?',text:s}}
-const CAT_LABEL={reading_comprehension:'Reading Comprehension',reasoning_ability:'Reasoning Ability',aptitude:'Aptitude'}
+const CAT_LABEL={comprehension:'Comprehension',basic_numeracy:'Basic Numeracy',logical_reasoning:'Logical Reasoning',data_interpretation:'Data Interpretation',interpersonal_skills:'Interpersonal Skills',general_mental_ability:'General Mental Ability',decision_making:'Decision Making'}
 
 function buildQHtml(qData,optMarks) {
   if (!qData) return ''
@@ -150,7 +150,7 @@ const agreeCount=Object.values(rowsBySetAQ).filter(r=>r.status==='agree').length
 const disagreeCount=Object.values(rowsBySetAQ).filter(r=>r.status==='disagree').length
 const instColHeaders=allKeys.map(k=>{
   const codeTag=(!k.isOfficial&&k.code&&k.code.toUpperCase()!=='A')?' <span style="font-size:9px;opacity:.7">(Set '+k.code.toUpperCase()+')</span>':''
-  return '<th'+(k.isOfficial?' class="col-official"':'')+'>'+k.name+codeTag+'</th>'
+  return '<th class="col-inst'+(k.isOfficial?' col-official':'')+'" data-inst="'+k.name.replace(/"/g,'&quot;')+'">'+k.name+codeTag+'</th>'
 }).join('')
 
 const html=`<!DOCTYPE html>
@@ -174,9 +174,13 @@ h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1C
 .tog-btn{padding:6px 16px;border-radius:8px;border:1.5px solid #E6E0D5;background:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#9CA3AF;cursor:pointer;transition:all .12s}
 .tog-btn.active{background:${P};border-color:${P};color:#fff}
 .tog-btn:hover:not(.active){border-color:${P};color:${P}}
-.tog-btn.cat-rc.active{background:#2563eb;border-color:#2563eb}
-.tog-btn.cat-ra.active{background:#7c3aed;border-color:#7c3aed}
-.tog-btn.cat-ap.active{background:#059669;border-color:#059669}
+.tog-btn.cat-comp.active{background:#2563eb;border-color:#2563eb}
+.tog-btn.cat-num.active{background:#059669;border-color:#059669}
+.tog-btn.cat-lr.active{background:#7c3aed;border-color:#7c3aed}
+.tog-btn.cat-di.active{background:#92400e;border-color:#92400e}
+.tog-btn.cat-is.active{background:#9f1239;border-color:#9f1239}
+.tog-btn.cat-gma.active{background:#115e59;border-color:#115e59}
+.tog-btn.cat-dm.active{background:#9a3412;border-color:#9a3412}
 .stats{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9CA3AF;margin-bottom:14px}
 .stats span{margin-right:14px}
 .s-agree{color:#15803d;font-weight:700} .s-dis{color:#dc2626;font-weight:700}
@@ -198,9 +202,13 @@ td{padding:8px 12px;text-align:center;vertical-align:top}
 td.td-qnum{font-family:'JetBrains Mono',monospace;font-size:.63rem;font-weight:600;color:${P};white-space:nowrap;border-right:1px solid #e2e8f0;vertical-align:top;padding-top:.85rem}
 td.td-q{text-align:left;vertical-align:top;padding:.7rem .9rem;color:#374151;font-size:.88rem;line-height:1.6}
 .q-cat-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:6px}
-.q-cat-reading_comprehension{background:#dbeafe;color:#1d4ed8}
-.q-cat-reasoning_ability{background:#ede9fe;color:#6d28d9}
-.q-cat-aptitude{background:#d1fae5;color:#065f46}
+.q-cat-comprehension{background:#dbeafe;color:#1d4ed8}
+.q-cat-basic_numeracy{background:#d1fae5;color:#065f46}
+.q-cat-logical_reasoning{background:#ede9fe;color:#6d28d9}
+.q-cat-data_interpretation{background:#fef3c7;color:#92400e}
+.q-cat-interpersonal_skills{background:#ffe4e6;color:#9f1239}
+.q-cat-general_mental_ability{background:#ccfbf1;color:#115e59}
+.q-cat-decision_making{background:#ffedd5;color:#9a3412}
 .q-lead{font-family:'Lora',Georgia,serif;font-size:.88rem;color:#111827;line-height:1.7;margin-bottom:.5rem}
 .q-passage{font-family:'Lora',Georgia,serif;font-size:.83rem;line-height:1.75;color:#1e3a5f;background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 5px 5px 0;padding:.6rem .9rem;margin-bottom:.6rem}
 .q-context{font-family:'Lora',Georgia,serif;font-size:.83rem;line-height:1.7;color:#3B2E1F;margin-bottom:.5rem;font-style:italic;border-left:3px solid #d97706;padding-left:.7rem}
@@ -224,6 +232,17 @@ td.ans-a{color:#7c3aed} td.ans-b{color:#0284c7} td.ans-c{color:#059669} td.ans-d
 td.ans-null{color:#D1D5DB;font-size:11px;font-weight:400} td.ans-ambig{color:#92400e;font-size:11px}
 td.td-official{background:rgba(194,65,12,.04)}
 .row-hidden{display:none}
+.stat-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid #E6E0D5;background:#fff;cursor:pointer;transition:all .12s;font-family:'JetBrains Mono',monospace}
+.stat-chip:hover:not(.active){border-color:#f97316}
+.stat-chip.active{border-color:#f97316;background:#fff7ed}
+.chip-num{font-size:15px;font-weight:800;line-height:1}
+.chip-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9CA3AF}
+.chip-all .chip-num{color:#f97316}
+.chip-agree .chip-num{color:#15803d}
+.chip-dis .chip-num{color:#dc2626}
+.inst-label{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1.5px solid #E6E0D5;background:#fff;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#6B7280;transition:all .12s;user-select:none}
+.inst-label:has(.inst-cb:checked){border-color:#f97316;background:#fff7ed;color:#c2410c}
+.inst-cb{accent-color:#f97316;cursor:pointer;width:12px;height:12px;flex-shrink:0;margin:0}
 </style>
 </head>
 <body>
@@ -244,19 +263,26 @@ td.td-official{background:rgba(194,65,12,.04)}
     </div>
     <div class="ctrl-row">
       <span class="control-label">Show</span>
-      <button class="tog-btn active" data-filter="all">All</button>
-      <button class="tog-btn" data-filter="agree">Agree</button>
-      <button class="tog-btn" data-filter="disagree">Discrepancies</button>
+      <button class="stat-chip chip-all active" data-filter="all"><span class="chip-num" id="cnt-all">${agreeCount+disagreeCount}</span><span class="chip-lbl">All</span></button>
+      <button class="stat-chip chip-agree" data-filter="agree"><span class="chip-num" id="cnt-agree">${agreeCount}</span><span class="chip-lbl">&#10003; Agree</span></button>
+      <button class="stat-chip chip-dis" data-filter="disagree"><span class="chip-num" id="cnt-dis">${disagreeCount}</span><span class="chip-lbl">&#10007; Discrepancies</span></button>
+    </div>
+    <div class="ctrl-row">
+      <span class="control-label">Institutes</span>
+      ${allKeys.map(k=>'<label class="inst-label"><input type="checkbox" class="inst-cb" data-inst="'+k.name.replace(/"/g,'&quot;')+'" checked>'+k.name+'</label>').join('')}
     </div>
     <div class="ctrl-row">
       <span class="control-label">Category</span>
       <button class="tog-btn active" data-cat="all">All</button>
-      <button class="tog-btn cat-rc" data-cat="reading_comprehension">Reading Comprehension</button>
-      <button class="tog-btn cat-ra" data-cat="reasoning_ability">Reasoning Ability</button>
-      <button class="tog-btn cat-ap" data-cat="aptitude">Aptitude</button>
+      <button class="tog-btn cat-comp" data-cat="comprehension">Comprehension</button>
+      <button class="tog-btn cat-num" data-cat="basic_numeracy">Basic Numeracy</button>
+      <button class="tog-btn cat-lr" data-cat="logical_reasoning">Logical Reasoning</button>
+      <button class="tog-btn cat-di" data-cat="data_interpretation">Data Interpretation</button>
+      <button class="tog-btn cat-is" data-cat="interpersonal_skills">Interpersonal Skills</button>
+      <button class="tog-btn cat-gma" data-cat="general_mental_ability">General Mental Ability</button>
+      <button class="tog-btn cat-dm" data-cat="decision_making">Decision Making</button>
     </div>
   </div>
-  <p class="stats" id="stats-bar"></p>
   <div class="tbl-wrap">
     <table>
       <thead>
@@ -275,27 +301,43 @@ var ROWS_MAP=${esc(rowsBySetAQ)};
 var CODE_ORDER=${esc(codeOrder)};
 var KEYS=${esc(allKeys.map(k=>({name:k.name,isOfficial:!!k.isOfficial})))};
 var currentCode='A',currentFilter='all',currentCat='all';
+var selectedInsts=new Set(KEYS.map(function(k){return k.name}));
 function ansClass(v){if(!v)return 'ans-null';if(v.length>1)return 'ans-ambig';return 'ans-'+v.toLowerCase()}
+function effStatus(row){
+  var nonNull=KEYS.filter(function(k){return selectedInsts.has(k.name)}).map(function(k){return row.answers[k.name]}).filter(function(v){return v!==null});
+  if(nonNull.length<2)return 'neutral';
+  var uniq=nonNull.filter(function(v,i,a){return a.indexOf(v)===i});
+  return uniq.length===1?'agree':'disagree';
+}
 function renderTable(){
-  var order=CODE_ORDER[currentCode],agree=0,disagree=0,shown=0,html='';
+  var order=CODE_ORDER[currentCode],agree=0,disagree=0,allCnt=0,html='';
   for(var idx=0;idx<order.length;idx++){
     var setAQ=order[idx],row=ROWS_MAP[setAQ];if(!row)continue;
     var qNum=row.codeQNums[currentCode],qDisp=qNum!==null&&qNum!==undefined?qNum:'—';
-    if(row.status==='agree')agree++;else if(row.status==='disagree')disagree++;
-    var hidden=(currentFilter==='agree'&&row.status!=='agree')||(currentFilter==='disagree'&&row.status!=='disagree')||(currentCat!=='all'&&row.category!==currentCat);
-    if(!hidden)shown++;
-    var cls=row.status==='agree'?'row-agree':row.status==='disagree'?'row-disagree':'';
+    var eff=effStatus(row);
+    var inCat=(currentCat==='all'||row.category===currentCat);
+    if(inCat){allCnt++;if(eff==='agree')agree++;else if(eff==='disagree')disagree++;}
+    var hidden=!inCat||(currentFilter==='agree'&&eff!=='agree')||(currentFilter==='disagree'&&eff!=='disagree');
+    var cls=eff==='agree'?'row-agree':eff==='disagree'?'row-disagree':'';
     if(hidden)cls+=(cls?' ':'')+'row-hidden';
     var ansCells='';
-    for(var ki=0;ki<KEYS.length;ki++){var k=KEYS[ki],v=row.answers[k.name];ansCells+='<td class="td-ans'+(k.isOfficial?' td-official':'')+' '+ansClass(v)+'">'+(v||'—')+'</td>';}
+    for(var ki=0;ki<KEYS.length;ki++){
+      var k=KEYS[ki];if(!selectedInsts.has(k.name))continue;
+      var v=row.answers[k.name];
+      ansCells+='<td class="td-ans'+(k.isOfficial?' td-official':'')+' '+ansClass(v)+'">'+(v||'—')+'</td>';
+    }
     html+='<tr class="'+cls+'"><td class="td-qnum">Q'+qDisp+'</td><td class="td-q">'+(row.qHtml||'')+'</td>'+ansCells+'</tr>';
   }
   document.getElementById('tbl-body').innerHTML=html;
-  document.getElementById('stats-bar').innerHTML='<span>'+shown+' shown</span><span class="s-agree">&#10003; '+agree+' agree</span><span class="s-dis">&#10007; '+disagree+' discrepancies</span>';
+  document.getElementById('cnt-all').textContent=allCnt;
+  document.getElementById('cnt-agree').textContent=agree;
+  document.getElementById('cnt-dis').textContent=disagree;
+  document.querySelectorAll('thead th.col-inst').forEach(function(th){th.style.display=selectedInsts.has(th.dataset.inst)?'':'none';});
 }
 document.querySelectorAll('[data-code]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-code]').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');currentCode=btn.dataset.code;renderTable()})});
 document.querySelectorAll('[data-filter]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-filter]').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');currentFilter=btn.dataset.filter;renderTable()})});
 document.querySelectorAll('[data-cat]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-cat]').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');currentCat=btn.dataset.cat;renderTable()})});
+document.querySelectorAll('.inst-cb').forEach(function(cb){cb.addEventListener('change',function(){var inst=cb.dataset.inst;if(!cb.checked){if(selectedInsts.size<=1){cb.checked=true;return}selectedInsts.delete(inst)}else{selectedInsts.add(inst)}renderTable()})});
 renderTable();
 </script>
 </body>

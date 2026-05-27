@@ -216,7 +216,7 @@ const agreeCount    = Object.values(rowsBySetAQ).filter(r => r.status === 'agree
 const disagreeCount = Object.values(rowsBySetAQ).filter(r => r.status === 'disagree').length
 
 const instColHeaders = allKeys.map(k =>
-  '<th' + (k.isOfficial ? ' class="col-official"' : '') + '>' + k.name + '</th>'
+  '<th class="col-inst' + (k.isOfficial ? ' col-official' : '') + '" data-inst="' + k.name.replace(/"/g, '&quot;') + '">' + k.name + '</th>'
 ).join('')
 
 const html = `<!DOCTYPE html>
@@ -294,6 +294,17 @@ td.ans-null{color:#D1D5DB;font-size:11px;font-weight:400}
 td.ans-ambig{color:#92400e;font-size:11px}
 td.td-official{background:rgba(194,65,12,.04)}
 .row-hidden{display:none}
+.stat-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid #E6E0D5;background:#fff;cursor:pointer;transition:all .12s;font-family:'JetBrains Mono',monospace}
+.stat-chip:hover:not(.active){border-color:${P}}
+.stat-chip.active{border-color:${P};background:#fff7ed}
+.chip-num{font-size:15px;font-weight:800;line-height:1}
+.chip-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9CA3AF}
+.chip-all .chip-num{color:${P}}
+.chip-agree .chip-num{color:#15803d}
+.chip-dis .chip-num{color:#dc2626}
+.inst-label{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1.5px solid #E6E0D5;background:#fff;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#6B7280;transition:all .12s;user-select:none}
+.inst-label:has(.inst-cb:checked){border-color:${P};background:#fff7ed;color:#c2410c}
+.inst-cb{accent-color:${P};cursor:pointer;width:12px;height:12px;flex-shrink:0;margin:0}
 </style>
 </head>
 <body>
@@ -315,13 +326,15 @@ td.td-official{background:rgba(194,65,12,.04)}
     </div>
     <div class="ctrl-row">
       <span class="control-label">Show</span>
-      <button class="tog-btn active" data-filter="all">All</button>
-      <button class="tog-btn" data-filter="agree">Agree</button>
-      <button class="tog-btn" data-filter="disagree">Discrepancies</button>
+      <button class="stat-chip chip-all active" data-filter="all"><span class="chip-num" id="cnt-all">${agreeCount+disagreeCount}</span><span class="chip-lbl">All</span></button>
+      <button class="stat-chip chip-agree" data-filter="agree"><span class="chip-num" id="cnt-agree">${agreeCount}</span><span class="chip-lbl">&#10003; Agree</span></button>
+      <button class="stat-chip chip-dis" data-filter="disagree"><span class="chip-num" id="cnt-dis">${disagreeCount}</span><span class="chip-lbl">&#10007; Discrepancies</span></button>
+    </div>
+    <div class="ctrl-row">
+      <span class="control-label">Institutes</span>
+      ${allKeys.map(k => '<label class="inst-label"><input type="checkbox" class="inst-cb" data-inst="' + k.name.replace(/"/g, '&quot;') + '" checked>' + k.name + '</label>').join('')}
     </div>
   </div>
-
-  <p class="stats" id="stats-bar"></p>
 
   <div class="tbl-wrap">
     <table>
@@ -344,6 +357,7 @@ var KEYS       = ${esc(allKeys.map(k => ({ name: k.name, isOfficial: !!k.isOffic
 
 var currentCode   = 'A';
 var currentFilter = 'all';
+var selectedInsts = new Set(KEYS.map(function(k) { return k.name; }));
 
 function ansClass(v) {
   if (!v) return 'ans-null';
@@ -351,9 +365,18 @@ function ansClass(v) {
   return 'ans-' + v.toLowerCase();
 }
 
+function effStatus(row) {
+  var nonNull = KEYS.filter(function(k) { return selectedInsts.has(k.name); })
+    .map(function(k) { return row.answers[k.name]; })
+    .filter(function(v) { return v !== null; });
+  if (nonNull.length < 2) return 'neutral';
+  var uniq = nonNull.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  return uniq.length === 1 ? 'agree' : 'disagree';
+}
+
 function renderTable() {
   var order = CODE_ORDER[currentCode];
-  var agree = 0, disagree = 0, shown = 0;
+  var agree = 0, disagree = 0;
   var html = '';
   for (var idx = 0; idx < order.length; idx++) {
     var setAQ = order[idx];
@@ -361,17 +384,18 @@ function renderTable() {
     if (!row) continue;
     var qNum = row.codeQNums[currentCode];
     var qDisp = qNum !== null && qNum !== undefined ? qNum : '—';
-    if (row.status === 'agree') agree++;
-    else if (row.status === 'disagree') disagree++;
-    var hidden = (currentFilter === 'agree' && row.status !== 'agree') ||
-                 (currentFilter === 'disagree' && row.status !== 'disagree');
-    if (!hidden) shown++;
-    var cls = row.status === 'agree' ? 'row-agree' : row.status === 'disagree' ? 'row-disagree' : '';
+    var eff = effStatus(row);
+    if (eff === 'agree') agree++;
+    else if (eff === 'disagree') disagree++;
+    var hidden = (currentFilter === 'agree' && eff !== 'agree') ||
+                 (currentFilter === 'disagree' && eff !== 'disagree');
+    var cls = eff === 'agree' ? 'row-agree' : eff === 'disagree' ? 'row-disagree' : '';
     if (hidden) cls += (cls ? ' ' : '') + 'row-hidden';
 
     var ansCells = '';
     for (var ki = 0; ki < KEYS.length; ki++) {
       var k = KEYS[ki];
+      if (!selectedInsts.has(k.name)) continue;
       var v = row.answers[k.name];
       ansCells += '<td class="td-ans' + (k.isOfficial ? ' td-official' : '') + ' ' + ansClass(v) + '">' + (v || '—') + '</td>';
     }
@@ -383,10 +407,11 @@ function renderTable() {
       '</tr>';
   }
   document.getElementById('tbl-body').innerHTML = html;
-  document.getElementById('stats-bar').innerHTML =
-    '<span>' + shown + ' shown</span>' +
-    '<span class="s-agree">&#10003; ' + agree + ' agree</span>' +
-    '<span class="s-dis">&#10007; ' + disagree + ' discrepancies</span>';
+  document.getElementById('cnt-agree').textContent = agree;
+  document.getElementById('cnt-dis').textContent = disagree;
+  document.querySelectorAll('thead th.col-inst').forEach(function(th) {
+    th.style.display = selectedInsts.has(th.dataset.inst) ? '' : 'none';
+  });
 }
 
 document.querySelectorAll('[data-code]').forEach(function(btn) {
@@ -403,6 +428,19 @@ document.querySelectorAll('[data-filter]').forEach(function(btn) {
     document.querySelectorAll('[data-filter]').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
+    renderTable();
+  });
+});
+
+document.querySelectorAll('.inst-cb').forEach(function(cb) {
+  cb.addEventListener('change', function() {
+    var inst = cb.dataset.inst;
+    if (!cb.checked) {
+      if (selectedInsts.size <= 1) { cb.checked = true; return; }
+      selectedInsts.delete(inst);
+    } else {
+      selectedInsts.add(inst);
+    }
     renderTable();
   });
 });

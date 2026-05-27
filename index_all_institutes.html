@@ -61,7 +61,8 @@ tr:hover td{background:var(--c-accent-bg)}
 .cq-context{font-family:'Lora',Georgia,serif;font-size:0.88rem;line-height:1.75;color:#3B2E1F;margin-bottom:8px;font-style:italic}
 .cq-passage{font-family:'Lora',Georgia,serif;font-size:0.86rem;line-height:1.78;color:#1e3a5f;background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:10px}
 .cq-stmts{margin:8px 0 10px;list-style:none;padding:0;display:flex;flex-direction:column;gap:5px}
-.cq-stmts li{font-size:0.87rem;background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.18);border-left:3px solid var(--c-accent);border-radius:2px;padding:.4rem .75rem;line-height:1.65;color:#1C1510}
+.cq-stmts li{display:flex;align-items:flex-start;gap:.4rem;font-size:0.87rem;background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.18);border-left:3px solid var(--c-accent);border-radius:2px;padding:.4rem .75rem;line-height:1.65;color:#1C1510}
+.cq-snum{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.74rem;color:var(--c-accent);min-width:1.6rem;flex-shrink:0;padding-top:.08rem}
 .cq-stmt-lbl{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.78rem;margin-right:4px;color:var(--c-accent)}
 .cq-assertion{background:#eff6ff;border:1px solid #bfdbfe;border-radius:2px;padding:.55rem .8rem;font-style:italic;font-size:.87rem;margin:8px 0 10px;line-height:1.65;font-family:'Lora',Georgia,serif;color:#1e3a5f}
 .cq-qtable{border-collapse:collapse;width:100%;font-size:0.82rem;margin:8px 0}
@@ -137,7 +138,7 @@ document.title=APP_NAME
 
 var scoreSent=false
 
-const state={screen:'landing',paperCode:null,responses:{},page:1,sortCol:null,sortDir:1,editingPaper:false,editPaperReview:false,tableView:0,confirmingNewAttempt:false,showQuestions:false,filterSubject:'all',filterStatus:'all',subjTableCollapsed:false,accTableCollapsed:false,qTableCollapsed:false,subjSortCol:'attPct',subjSortDir:-1,accSortCol:'accPct',accSortDir:-1,selectedInstituteIdx:0,candidateName:'',candidatePhone:'',candidatePlace:'',candidatePlaceOther:'',profileErrors:{},profileSubmitted:false}
+const state={screen:'landing',paperCode:null,responses:{},page:1,sortCol:null,sortDir:1,editingPaper:false,editPaperReview:false,tableView:0,confirmingNewAttempt:false,showQuestions:false,filterSubject:'all',filterStatus:'all',subjTableCollapsed:false,accTableCollapsed:false,qTableCollapsed:false,subjSortCol:'attPct',subjSortDir:-1,accSortCol:'accPct',accSortDir:-1,selectedInstituteIdx:0,candidateName:'',candidatePhone:'',candidatePlace:'',candidatePlaceOther:'',profileErrors:{},profileSubmitted:false,submissionId:null}
 
 // Restore persisted state on load (window.__DL_STATE__ set by downloaded file takes priority)
 try{
@@ -166,6 +167,9 @@ try{
     state.candidatePlace=_p.candidatePlace||''
     state.candidatePlaceOther=_p.candidatePlaceOther||''
     state.profileSubmitted=_p.profileSubmitted||false
+    state.submissionId=_p.submissionId||null
+    // scorePosted persists across reloads; fall back to profileSubmitted for pre-persist sessions
+    scoreSent=_p.scorePosted||_p.profileSubmitted||false
   }
 }catch(e){}
 
@@ -175,7 +179,7 @@ function saveState(){
       paperCode:state.paperCode,responses:state.responses,
       page:state.page,screen:state.screen,
       sortCol:state.sortCol,sortDir:state.sortDir,tableView:state.tableView||0,
-      showQuestions:state.showQuestions,filterSubject:state.filterSubject,filterStatus:state.filterStatus,subjTableCollapsed:state.subjTableCollapsed,accTableCollapsed:state.accTableCollapsed,qTableCollapsed:state.qTableCollapsed,subjSortCol:state.subjSortCol,subjSortDir:state.subjSortDir,accSortCol:state.accSortCol,accSortDir:state.accSortDir,selectedInstituteIdx:state.selectedInstituteIdx,candidateName:state.candidateName,candidatePhone:state.candidatePhone,candidatePlace:state.candidatePlace,candidatePlaceOther:state.candidatePlaceOther,profileSubmitted:state.profileSubmitted
+      showQuestions:state.showQuestions,filterSubject:state.filterSubject,filterStatus:state.filterStatus,subjTableCollapsed:state.subjTableCollapsed,accTableCollapsed:state.accTableCollapsed,qTableCollapsed:state.qTableCollapsed,subjSortCol:state.subjSortCol,subjSortDir:state.subjSortDir,accSortCol:state.accSortCol,accSortDir:state.accSortDir,selectedInstituteIdx:state.selectedInstituteIdx,candidateName:state.candidateName,candidatePhone:state.candidatePhone,candidatePlace:state.candidatePlace,candidatePlaceOther:state.candidatePlaceOther,profileSubmitted:state.profileSubmitted,submissionId:state.submissionId,scorePosted:scoreSent
     }))
   }catch(e){}
 }
@@ -218,7 +222,7 @@ function calcScore(key){
   }
   var maxScore=correct*PAPER_CONFIG.correctMark-wrong*PAPER_CONFIG.wrongMark
   var minScore=(correct-ambig)*PAPER_CONFIG.correctMark-(wrong+ambig)*PAPER_CONFIG.wrongMark
-  return{correct:correct,wrong:wrong,skip:skip,score:maxScore,
+  return{correct:correct,wrong:wrong,skip:skip,ambig:ambig,score:maxScore,
     minScore:ambig>0?minScore:null,maxScore:ambig>0?maxScore:null,isRange:ambig>0}
 }
 
@@ -267,7 +271,11 @@ function pageAnswered(p){
 
 function postScore(){
   if(scoreSent) return
+  if(!state.submissionId){
+    state.submissionId=Date.now().toString(36)+Math.random().toString(36).slice(2,8)
+  }
   scoreSent=true
+  saveState()  // persist scorePosted:true and submissionId before async fetch
   var scOff=isKeyEmpty(OFFICIAL_KEY)?null:calcScore(OFFICIAL_KEY)
   var ctrl=new AbortController();setTimeout(function(){ctrl.abort()},10000)
   fetch(SUPABASE_CONFIG.url+'/rest/v1/'+SUPABASE_CONFIG.table,{
@@ -290,12 +298,14 @@ function postScore(){
       responses:state.responses,
       candidate_name:state.candidateName||null,
       candidate_phone:state.candidatePhone||null,
-      candidate_place:state.candidatePlace||null
+      candidate_place:state.candidatePlace||null,
+      submission_id:state.submissionId
     })
   }).then(function(r){
-    if(!r.ok) scoreSent=false
-  }).catch(function(){
-    scoreSent=false
+    if(!r.ok){scoreSent=false;saveState()}
+  }).catch(function(err){
+    if(err&&err.name==='AbortError') return
+    scoreSent=false;saveState()
   })
 }
 
@@ -613,8 +623,8 @@ function renderResult(){
       scoreRows+='<tr>' +
         '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;color:#1C1510;">'+key.name+'</td>' +
         '<td style="text-align:center;">'+scoreCell+'</td>' +
-        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+sc.correct+'</td>' +
-        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+sc.wrong+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:'+(sc.isRange?'13':'15')+'px;font-weight:800;color:#15803d;">'+(sc.isRange?(sc.correct-sc.ambig)+'&ndash;'+sc.correct:sc.correct)+'</td>' +
+        '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:'+(sc.isRange?'13':'15')+'px;font-weight:800;color:#dc2626;">'+(sc.isRange?sc.wrong+'&ndash;'+(sc.wrong+sc.ambig):sc.wrong)+'</td>' +
         '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+sc.skip+'</td>' +
       '</tr>'
     }
@@ -634,8 +644,8 @@ function renderResult(){
     scoreRows+='<tr style="background:#EFF6FF;">' +
       '<td style="font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;color:'+offRc+';">UPSC Official Answer Key</td>' +
       '<td style="text-align:center;">'+offScoreCell+'</td>' +
-      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#15803d;">'+offSc.correct+'</td>' +
-      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#dc2626;">'+offSc.wrong+'</td>' +
+      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:'+(offSc.isRange?'13':'15')+'px;font-weight:800;color:#15803d;">'+(offSc.isRange?(offSc.correct-offSc.ambig)+'&ndash;'+offSc.correct:offSc.correct)+'</td>' +
+      '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:'+(offSc.isRange?'13':'15')+'px;font-weight:800;color:#dc2626;">'+(offSc.isRange?offSc.wrong+'&ndash;'+(offSc.wrong+offSc.ambig):offSc.wrong)+'</td>' +
       '<td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:15px;font-weight:800;color:#9CA3AF;">'+offSc.skip+'</td>' +
     '</tr>'
   }
@@ -691,7 +701,7 @@ function renderResult(){
 
     var subjectMap={}
     var isCsatPaper=PAPER_CONFIG.paper==='CSAT'
-    var csatCatLabel={reading_comprehension:'Reading Comprehension',reasoning_ability:'Reasoning Ability',aptitude:'Aptitude'}
+    var csatCatLabel={comprehension:'Comprehension',interpersonal_skills:'Interpersonal Skills',logical_reasoning:'Logical Reasoning',decision_making:'Decision Making',general_mental_ability:'General Mental Ability',basic_numeracy:'Basic Numeracy',data_interpretation:'Data Interpretation'}
     QUESTIONS.questions.forEach(function(q){
       if(isCsatPaper){if(q.category&&!subjectMap[q.category]) subjectMap[q.category]=csatCatLabel[q.category]||q.category}
       else{if(q.subject_group&&!subjectMap[q.subject_group]) subjectMap[q.subject_group]=q.subject_group}
@@ -785,7 +795,7 @@ function renderResult(){
           var qcHtml=''
           if(PAPER_CONFIG.paper==='CSAT'){
             // ── CSAT renderer ─────────────────────────────────────────
-            var catMap={reading_comprehension:'Reading Comprehension',reasoning_ability:'Reasoning Ability',aptitude:'Aptitude'}
+            var catMap={comprehension:'Comprehension',basic_numeracy:'Basic Numeracy',logical_reasoning:'Logical Reasoning',data_interpretation:'Data Interpretation',interpersonal_skills:'Interpersonal Skills',general_mental_ability:'General Mental Ability',decision_making:'Decision Making'}
             var catLabel=catMap[qData.category]||qData.category||''
             if(catLabel||qData.topic) qcHtml+='<span class="cq-subject">'+(catLabel&&qData.topic?catLabel+' · '+qData.topic:catLabel||qData.topic)+'</span>'
             if(qData.instruction_block&&CSAT_BLOCKS[qData.instruction_block]){
@@ -794,9 +804,31 @@ function renderResult(){
             if(qData.passage_id&&CSAT_PASSAGES[qData.passage_id]){
               qcHtml+='<div class="cq-passage">'+itl(CSAT_PASSAGES[qData.passage_id].text)+'</div>'
             }
-            qcHtml+='<div class="cq-lead">'+itl(qData.text)+'</div>'
+            ;(function(){
+              var raw=qData.text||''
+              var lines=raw.split('\n')
+              var intro=[],stmts=[],tail=[]
+              var inStmts=false
+              lines.forEach(function(ln){
+                if(/^([0-9]+|[IVXLC]+)\.\s+/i.test(ln)){inStmts=true;stmts.push(ln)}
+                else if(inStmts&&ln.trim()){tail.push(ln)}
+                else if(!inStmts){intro.push(ln)}
+              })
+              if(intro.join('').trim()) qcHtml+='<div class="cq-lead">'+itl(intro.join('\n'))+'</div>'
+              if(stmts.length){
+                qcHtml+='<ul class="cq-stmts">'
+                stmts.forEach(function(s){
+                  var mp=s.match(/^([0-9]+\.|[IVXLC]+\.)\s+([\s\S]*)$/i)
+                  if(mp) qcHtml+='<li><span class="cq-snum">'+mp[1]+'</span><span>'+itl(mp[2])+'</span></li>'
+                  else qcHtml+='<li>'+itl(s)+'</li>'
+                })
+                qcHtml+='</ul>'
+              }
+              if(tail.join('').trim()) qcHtml+='<div class="cq-tail" style="margin-top:4px;">'+itl(tail.join('\n'))+'</div>'
+              if(stmts.length===0&&!intro.join('').trim()&&!tail.join('').trim()) qcHtml+='<div class="cq-lead">'+itl(raw)+'</div>'
+            })()
             if(qData.statement_I){
-              qcHtml+='<ul class="cq-stmts"><li><strong>Statement I:</strong> '+itl(qData.statement_I)+'</li>'+(qData.statement_II?'<li><strong>Statement II:</strong> '+itl(qData.statement_II)+'</li>':'')+'</ul>'
+              qcHtml+='<ul class="cq-stmts"><li><span class="cq-snum">I.</span><span>'+itl(qData.statement_I)+'</span></li>'+(qData.statement_II?'<li><span class="cq-snum">II.</span><span>'+itl(qData.statement_II)+'</span></li>':'')+'</ul>'
             }
             if(qData.table&&qData.table.headers){
               var etC=qData.table
@@ -1091,7 +1123,7 @@ function bind(){
     state.sortCol=null;state.sortDir=1;state.editingPaper=false;state.editPaperReview=false;state.confirmingNewAttempt=false
     state.showQuestions=false;state.filterSubject='all';state.filterStatus='all'
     state.subjSortCol=null;state.subjSortDir=-1;state.accSortCol=null;state.accSortDir=-1
-    state.candidateName='';state.candidatePhone='';state.candidatePlace='';state.candidatePlaceOther='';state.profileErrors={};state.profileSubmitted=false
+    state.candidateName='';state.candidatePhone='';state.candidatePlace='';state.candidatePlaceOther='';state.profileErrors={};state.profileSubmitted=false;state.submissionId=null
     render()
   })
   on('confirm-new-attempt-no','click',function(){state.confirmingNewAttempt=false;render()})
@@ -1145,7 +1177,9 @@ function bind(){
     var errs={}
     var nt=name.trim()
     if(!nt) errs.name='Name is required.'
+    else if(name[0]===' ') errs.name='Name cannot start with a space.'
     else if(!/^[a-zA-Z ]+$/.test(nt)) errs.name='Only letters and spaces allowed.'
+    else if((nt.match(/[a-zA-Z]/g)||[]).length<5) errs.name='Name must have at least 5 letters.'
     var pt=phone.trim()
     if(!pt) errs.phone='Phone number is required.'
     else if(!/^\d{10}$/.test(pt)) errs.phone='Enter a valid 10-digit number.'
