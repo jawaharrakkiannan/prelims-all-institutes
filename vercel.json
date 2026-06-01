@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node build_all_institutes.js gs1 && node build_all_institutes.js csat",
+  "buildCommand": "cp index.html dist/index.html && node build_all_institutes.js gs1 && node build_all_institutes.js csat",
   "outputDirectory": "dist",
   "installCommand": "echo skip",
   "headers": [

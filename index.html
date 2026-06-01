@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- Support: upsc.ai.stack@gmail.com — mail for a quick reply -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPSC CSE Prelims 2026 Score Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F7F3EA;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px}
+.wrap{width:100%;max-width:440px}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f97316;margin-bottom:12px}
+h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1C1510;line-height:1.25;margin-bottom:6px}
+.sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9CA3AF;letter-spacing:.5px;margin-bottom:36px}
+.paper-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 22px;border-radius:14px;border:2px solid #E6E0D5;background:#fff;cursor:pointer;text-align:left;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;text-decoration:none;color:inherit}
+.paper-btn:hover{border-color:#f97316;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.paper-btn__left{}
+.paper-btn__tag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#f97316;margin-bottom:4px}
+.paper-btn__name{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#1C1510}
+.paper-btn__meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;margin-top:3px}
+.paper-btn__arrow{font-size:20px;color:#f97316;flex-shrink:0;margin-left:12px}
+.paper-btn--primary{background:#f97316;border-color:#f97316}
+.paper-btn--primary .paper-btn__tag{color:rgba(255,255,255,.75)}
+.paper-btn--primary .paper-btn__name{color:#fff}
+.paper-btn--primary .paper-btn__meta{color:rgba(255,255,255,.65)}
+.paper-btn--primary .paper-btn__arrow{color:#fff}
+.paper-btn--primary:hover{border-color:#f97316;box-shadow:0 4px 20px rgba(249,115,22,.35)}
+.footer{margin-top:32px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C4BDB3;letter-spacing:.5px}
+.divider{display:flex;align-items:center;gap:10px;margin:24px 0 16px}
+.divider-line{flex:1;height:1px;background:#E6E0D5}
+.divider-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C4BDB3;white-space:nowrap}
+.res-group{display:flex;flex-direction:column;width:100%}
+.res-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 22px;border-radius:14px;border:2px solid #E6E0D5;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;text-decoration:none;color:#1C1510;font-family:'Playfair Display',serif;font-size:17px;font-weight:400;width:100%}
+.res-btn:hover{border-color:#f97316;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.res-btn svg{flex-shrink:0;color:#6B7280;width:18px;height:18px}
+.box-2026{border:2px solid #f97316;border-radius:16px;background:#fff7ed;padding:16px;margin-bottom:14px}
+.box-2026-badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f97316;margin-bottom:12px}
+.box-2026-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#f97316}
+.box-2026 .res-btn{background:#fff;border-color:#FDDCB5;margin-bottom:10px}
+.box-2026 .res-btn:last-child{margin-bottom:0}
+.box-2026 .res-btn:hover{border-color:#f97316;background:#fff7ed}
+</style>
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId setPersonPropertiesForFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_oNitam9jGzdguHb734fucuTzPqK6RsFkqJairewopnhy',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only'})
+</script>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Score Checker</p>
+  <h1>UPSC CSE Prelims 2026</h1>
+  <p class="sub">Select your paper to check your score</p>
+
+  <a href="/gs1" class="paper-btn paper-btn--primary">
+    <div class="paper-btn__left">
+      <div class="paper-btn__tag">Paper 1</div>
+      <div class="paper-btn__name">General Studies</div>
+      <div class="paper-btn__meta">100 Questions &middot; 200 Marks &middot; +2 / &minus;0.67</div>
+    </div>
+    <span class="paper-btn__arrow">&#8594;</span>
+  </a>
+
+  <a href="/csat" class="paper-btn">
+    <div class="paper-btn__left">
+      <div class="paper-btn__tag">Paper 2</div>
+      <div class="paper-btn__name">CSAT</div>
+      <div class="paper-btn__meta">80 Questions &middot; 200 Marks &middot; +2.5 / &minus;0.83</div>
+    </div>
+    <span class="paper-btn__arrow" style="color:#9CA3AF">&#8594;</span>
+  </a>
+
+  <div class="divider"><span class="divider-line"></span><span class="divider-label">Resources</span><span class="divider-line"></span></div>
+
+  <div class="box-2026">
+    <div class="box-2026-badge">UPSC CSE Prelims 2026</div>
+    <a href="/prelims_2026_gs_paper.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+      UPSC 2026 GS Question Paper
+    </a>
+    <a href="/prelims_2026_subject_analysis.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg>
+      UPSC 2026 GS Subject-wise Analysis
+    </a>
+    <a href="/prelims_2026_gs_paper_Question_types.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h7a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h7a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+      UPSC 2026 GS Question Types
+    </a>
+    <a href="/prelims_2026_institute_key_comparison.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+      Institute GS Key Comparison
+    </a>
+    <a href="/prelims_2026_CSAT_paper.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+      UPSC 2026 CSAT Question Paper
+    </a>
+    <a href="/prelims_2026_csat_key_comparison.html" class="res-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+      Institute CSAT Key Comparison
+    </a>
+  </div>
+
+  <div class="res-group">
+  <a href="/total-qns-attempt-planner.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+    No. of Questions Attempt Strategy
+  </a>
+  <a href="/upsc_prelims_cutoff.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+    Previous Years Cut-off Details
+  </a>
+  <a href="/gs_prelims_pyqs_question_bank.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+    UPSC CSE Prelims GS Question Bank
+  </a>
+  <a href="/gs_mains_pyqs_question_bank.html" class="res-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+    UPSC CSE Mains GS Question Bank
+  </a>
+  </div>
+
+  <p class="footer">upsc.ai.stack@gmail.com</p>
+</div>
+</body>
+</html>
