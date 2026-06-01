@@ -22,6 +22,7 @@
     { "src": "/upsc_prelims_cutoff.html", "dest": "/upsc_prelims_cutoff.html" },
     { "src": "/gs_prelims_pyqs_question_bank.html", "dest": "/gs_prelims_pyqs_question_bank.html" },
     { "src": "/gs_mains_pyqs_question_bank.html", "dest": "/gs_mains_pyqs_question_bank.html" },
+    { "src": "/prelims_2026_gs_paper_Question_types.html", "dest": "/prelims_2026_gs_paper_Question_types.html" },
     { "src": "/", "dest": "/index.html" }
   ]
 }
