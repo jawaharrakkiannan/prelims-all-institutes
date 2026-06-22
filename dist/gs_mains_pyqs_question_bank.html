@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -943,10 +943,16 @@ function renderGSTable(items, el) {
 }
 
 /* ── GS Keyword view ────────────────────────────────────────────── */
-let gsViewMode = 'table';
+let gsViewMode = 'keyword';
+let gsKwDedup = false;
 
 function toggleGSView() {
   gsViewMode = gsViewMode === 'table' ? 'keyword' : 'table';
+  applyFilters();
+}
+
+function toggleGSKwDedup() {
+  gsKwDedup = !gsKwDedup;
   applyFilters();
 }
 
@@ -974,7 +980,6 @@ function renderGSKeywordView(items, el) {
     const subjectItems = groups.get(s);
     if (!subjectItems || !subjectItems.length) continue;
 
-    // Keyword order from syllabus
     let kwOrder = [];
     if (state.paper && state.paper !== 'essay' && SYLLABUS['GS' + state.paper] && SYLLABUS['GS' + state.paper][s]) {
       kwOrder = SYLLABUS['GS' + state.paper][s];
@@ -984,62 +989,126 @@ function renderGSKeywordView(items, el) {
       }
     }
 
-    const kwGroups = new Map();
-    for (const k of kwOrder) kwGroups.set(k, []);
-    const unkeyed = [];
-    for (const item of subjectItems) {
-      const itemKwsLower = (item.keywords || []).map(k => k.toLowerCase());
-      let matched = false;
-      for (const k of kwOrder) {
-        if (itemKwsLower.includes(k.toLowerCase())) { kwGroups.get(k).push(item); matched = true; }
-      }
-      if (!matched) unkeyed.push(item);
-    }
-    for (const arr of kwGroups.values()) arr.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
-    unkeyed.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
-
-    const hasRows = [...kwGroups.values()].some(a => a.length > 0) || unkeyed.length > 0;
-    if (!hasRows) continue;
-
     html += '<div class="gs-kv-subject-header">' + esc(s) + '</div>';
     html += '<div style="overflow-x:auto;margin-bottom:1.4rem"><table class="gs-kw-table"><thead><tr>' +
       '<th>Keyword</th><th>Year</th><th>Question</th><th>Marks</th>' +
       '</tr></thead><tbody>';
 
     let kwGroupIdx = 0;
-    for (const k of kwOrder) {
-      const arr = kwGroups.get(k);
-      if (!arr || !arr.length) continue;
-      for (let i = 0; i < arr.length; i++) {
-        const item = arr[i];
-        const cls = [(i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '', i % 2 === 1 ? 'gs-row-alt' : ''].filter(Boolean).join(' ');
-        html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
-        if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + arr.length + '">' + esc(k) + '</td>';
-        html += '<td class="gs-year-cell">' + item.year + '</td>';
-        html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
-        html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
-        html += '</tr>';
+
+    if (gsKwDedup) {
+      // Dedup mode: items with 2+ keywords go into one combined group (shown first)
+      const singleGroups = new Map();
+      for (const k of kwOrder) singleGroups.set(k, []);
+      const multiMap = new Map();
+      const unkeyed = [];
+      for (const item of subjectItems) {
+        const itemKwsLower = (item.keywords || []).map(k => k.toLowerCase());
+        const matched = kwOrder.filter(k => itemKwsLower.includes(k.toLowerCase()));
+        if (matched.length === 0) { unkeyed.push(item); }
+        else if (matched.length === 1) { singleGroups.get(matched[0]).push(item); }
+        else {
+          const key = matched.join('\0');
+          if (!multiMap.has(key)) multiMap.set(key, { label: matched.join(' + '), items: [] });
+          multiMap.get(key).items.push(item);
+        }
       }
-      kwGroupIdx++;
-    }
-    if (unkeyed.length) {
-      for (let i = 0; i < unkeyed.length; i++) {
-        const item = unkeyed[i];
-        const cls = (i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '';
-        html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
-        if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + unkeyed.length + '">—</td>';
-        html += '<td class="gs-year-cell">' + item.year + '</td>';
-        html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
-        html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
-        html += '</tr>';
+      for (const g of multiMap.values()) g.items.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
+      for (const arr of singleGroups.values()) arr.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
+      unkeyed.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
+      for (const g of multiMap.values()) {
+        const arr = g.items;
+        for (let i = 0; i < arr.length; i++) {
+          const item = arr[i];
+          const cls = [(i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '', i % 2 === 1 ? 'gs-row-alt' : ''].filter(Boolean).join(' ');
+          html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+          if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + arr.length + '">' + esc(g.label) + '</td>';
+          html += '<td class="gs-year-cell">' + item.year + '</td>';
+          html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
+          html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
+          html += '</tr>';
+        }
+        kwGroupIdx++;
+      }
+      for (const k of kwOrder) {
+        const arr = singleGroups.get(k);
+        if (!arr || !arr.length) continue;
+        for (let i = 0; i < arr.length; i++) {
+          const item = arr[i];
+          const cls = [(i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '', i % 2 === 1 ? 'gs-row-alt' : ''].filter(Boolean).join(' ');
+          html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+          if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + arr.length + '">' + esc(k) + '</td>';
+          html += '<td class="gs-year-cell">' + item.year + '</td>';
+          html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
+          html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
+          html += '</tr>';
+        }
+        kwGroupIdx++;
+      }
+      if (unkeyed.length) {
+        for (let i = 0; i < unkeyed.length; i++) {
+          const item = unkeyed[i];
+          const cls = (i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '';
+          html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+          if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + unkeyed.length + '">—</td>';
+          html += '<td class="gs-year-cell">' + item.year + '</td>';
+          html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
+          html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
+          html += '</tr>';
+        }
+      }
+    } else {
+      // Default mode: question appears under each keyword it belongs to
+      const kwGroups = new Map();
+      for (const k of kwOrder) kwGroups.set(k, []);
+      const unkeyed = [];
+      for (const item of subjectItems) {
+        const itemKwsLower = (item.keywords || []).map(k => k.toLowerCase());
+        let matched = false;
+        for (const k of kwOrder) {
+          if (itemKwsLower.includes(k.toLowerCase())) { kwGroups.get(k).push(item); matched = true; }
+        }
+        if (!matched) unkeyed.push(item);
+      }
+      for (const arr of kwGroups.values()) arr.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
+      unkeyed.sort((a, b) => b.year - a.year || a.question_number - b.question_number);
+      for (const k of kwOrder) {
+        const arr = kwGroups.get(k);
+        if (!arr || !arr.length) continue;
+        for (let i = 0; i < arr.length; i++) {
+          const item = arr[i];
+          const cls = [(i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '', i % 2 === 1 ? 'gs-row-alt' : ''].filter(Boolean).join(' ');
+          html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+          if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + arr.length + '">' + esc(k) + '</td>';
+          html += '<td class="gs-year-cell">' + item.year + '</td>';
+          html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
+          html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
+          html += '</tr>';
+        }
+        kwGroupIdx++;
+      }
+      if (unkeyed.length) {
+        for (let i = 0; i < unkeyed.length; i++) {
+          const item = unkeyed[i];
+          const cls = (i === 0 && kwGroupIdx > 0) ? 'gs-group-break' : '';
+          html += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+          if (i === 0) html += '<td class="gs-kw-label-cell" rowspan="' + unkeyed.length + '">—</td>';
+          html += '<td class="gs-year-cell">' + item.year + '</td>';
+          html += '<td class="gs-q-cell">' + renderQCell(item) + '</td>';
+          html += '<td class="gs-marks-cell">' + (item.marks ? esc(String(item.marks)) + 'M' : '—') + '</td>';
+          html += '</tr>';
+        }
       }
     }
+
     html += '</tbody></table></div>';
   }
 
+  const dedupLabel = gsKwDedup ? 'Show All Keywords' : 'Group Multi-Keyword';
+  const dedupStyle = gsKwDedup ? 'background:var(--accent2);border-color:var(--accent);color:var(--accent)' : '';
   const controls = '<div class="gs-results-controls">' +
     '<button class="inline-toggle-btn" onclick="toggleGSView()">Subject-Table View</button>' +
-    '<span class="gs-view-note">Note: questions with multiple keywords repeat under each keyword.</span>' +
+    '<button class="inline-toggle-btn" onclick="toggleGSKwDedup()" style="' + dedupStyle + '">' + dedupLabel + '</button>' +
     '</div>';
   el.innerHTML = (html ? controls + html : '<div class="no-results">No questions match the current filters.</div>');
   el.querySelectorAll('.gs-kw-table').forEach(applyGroupHover);
@@ -1663,7 +1732,8 @@ document.getElementById('keyterm-search').addEventListener('input', function() {
 
 /* ── Reset ──────────────────────────────────────────────────────── */
 function resetFilters() {
-  gsViewMode = 'table';
+  gsViewMode = 'keyword';
+  gsKwDedup = false;
   multiYearMode = false;
   document.getElementById('multi-year-cb').checked = false;
   multiThemeMode = true;
@@ -1760,7 +1830,7 @@ function ensureSubjectBackBtn() {
     { key: 'Essay', label: 'Essay',         sub: 'All essay themes · 2009 – 2025' },
   ];
 
-  const st = { screen: 'home', paper: null, subject: null, mode: 'detail', kwFilter: null };
+  const st = { screen: 'home', paper: null, subject: null, mode: 'detail', kwFilter: null, dedup: false };
 
   function nEsc(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1802,7 +1872,7 @@ function ensureSubjectBackBtn() {
   }
 
   function nGoBack() {
-    if (st.screen === 'table')         nNavigate('subjects', { subject: null, kwFilter: null });
+    if (st.screen === 'table')         nNavigate('subjects', { subject: null, kwFilter: null, dedup: false });
     else if (st.screen === 'subjects') nNavigate('home',     { paper: null, subject: null, kwFilter: null });
     else if (st.screen === 'home')     showScreen('home');
   }
@@ -1915,6 +1985,34 @@ function ensureSubjectBackBtn() {
   function nBuildGSRows() {
     const kws = (SYLLABUS[st.paper]||{})[st.subject] || [];
     const qs  = (GS[st.paper]||[]).filter(q => q.subject === st.subject);
+
+    if (st.dedup) {
+      // Dedup mode: items with 2+ keywords go into one combined group (shown first)
+      const singleGroups = new Map();
+      for (const kw of kws) singleGroups.set(kw, []);
+      const multiMap = new Map();
+      const uncat = [];
+      for (const q of qs) {
+        const matched = kws.filter(k => (q.keywords||[]).includes(k));
+        if (matched.length === 0) { uncat.push(q); }
+        else if (matched.length === 1) { singleGroups.get(matched[0]).push(q); }
+        else {
+          const key = matched.join('\0');
+          if (!multiMap.has(key)) multiMap.set(key, { label: matched.join(' + '), items: [] });
+          multiMap.get(key).items.push(q);
+        }
+      }
+      const groups = [];
+      for (const g of multiMap.values()) { g.items.sort((a,b)=>b.year-a.year); groups.push(g); }
+      for (const kw of kws) {
+        const arr = singleGroups.get(kw);
+        if (arr && arr.length) { arr.sort((a,b)=>b.year-a.year); groups.push({ label: kw, items: arr }); }
+      }
+      if (uncat.length) { uncat.sort((a,b)=>b.year-a.year); groups.push({ label: 'Uncategorised', items: uncat }); }
+      return groups;
+    }
+
+    // Default mode: question appears under each keyword it belongs to
     const kwSet = new Set(kws);
     const groups = [];
     for (const kw of kws) {
@@ -1925,7 +2023,6 @@ function ensureSubjectBackBtn() {
     if (uncat.length) groups.push({ label: 'Uncategorised', items: uncat });
     return groups;
   }
-
   function nBuildEssayRows() {
     const essays = (ESSAYS_BY_THEME[st.subject]||[]).slice().sort((a,b)=>b.year-a.year);
     const subThemes = [...new Set(essays.map(e=>e.sub_theme).filter(Boolean))];
@@ -2021,6 +2118,7 @@ function ensureSubjectBackBtn() {
           <div class="table-sub">${nEsc(st.subject)} &nbsp;·&nbsp; ${total} question${total!==1?'s':''}</div>
         </div>
         ${isGS ? `<button class="toggle-btn${st.mode==='summary'?' on':''}" data-nav-action="toggle-mode">${modeLabel}</button>` : ''}
+        ${isGS ? `<button class="toggle-btn${st.dedup?' on':''}" data-nav-action="toggle-dedup">${st.dedup ? 'Show All Keywords' : 'Group Multi-Keyword'}</button>` : ''}
       </div>
       ${nRenderKwIndex(allGroups)}
       <div id="kw-content">${content}</div>
@@ -2043,6 +2141,9 @@ function ensureSubjectBackBtn() {
     } else if (a === 'toggle-mode') {
       st.mode = st.mode === 'detail' ? 'summary' : 'detail';
       nRender();
+    } else if (a === 'toggle-dedup') {
+      st.dedup = !st.dedup;
+      nRender(); nBindAfterRender();
     } else if (a === 'select-all') {
       st.kwFilter = el.checked ? null : new Set();
       nRender(); nBindAfterRender();
